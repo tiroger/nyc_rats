@@ -12,3 +12,13 @@ Data is from 2010-Sept 16th, 2017 and includes date, location (lat/lon), type of
 Acknowledgements:
 Data was produced by the City of New York via their 311 portal.
 
+---
+
+## Initial rat data analysis
+
+1. Graphs:
+
+	- Rat sightings over time
+
+
+
