@@ -15,18 +15,7 @@ people at the time of the study.[1](https://rss.onlinelibrary.wiley.com/doi/pdf/
 	* final_rat_sightings.csv - reported rat sightings (Incident ID, Sighting Date, Complaint Type, Incident, Location Type, Incident Zip, Borough, X Coordinate, y coordinate, Latitude, Longitude)
 	* final_rat_violations.csv - rat related restaurant violations (
 	* final_weather.csv - weather data
-	
-## Questions
 
-Q1 - What zip codes have the most restaurants with rat violations? (What zip codes to avoid)
-
-Q2 - There is no relationship between restaurant violations and rat sightings.
-
-Q3 - There are more rat sightings during colder weather
-
-Q4 - Rat sightings are more likely in restaurants than in residential dwellings
-
-Q5 - 
 
 ## Content:
 New York City rodent complaints can be made online, or by dialing 3-1-1, and the New York City guide Preventing Rats on Your Property discusses how the New York City Health Department inspects private and public properties for rats. Property owners that fail inspections receive a Commissioner's Order and have five days to correct the problem. If after five days the property fails a second inspection, the owner receives a Notice of Violation and can be fined. The property owner is billed for any clean-up or extermination carried out by the Health Department.
@@ -35,4 +24,20 @@ Data is from 2010-Sept 16th, 2017 and includes date, location (lat/lon), type of
 
 Acknowledgements:
 Data was produced by the City of New York via their 311 portal.
+
+---
+
+### Questions
+
+Q1 - Which Borough and zip codes have the most rat sightings?
+
+Q2 - Is there a correlation with zip code population and restaurant density?
+
+Q3 - Have rat sightings increased over the years?
+
+Q3 - Is there a seasonal pattern to rat sightings?
+
+Q4 - Is there a correlation between rat sightings and climate parameters?
+
+Q5 - Do fluctiuations in NYC weather correlate with rat sightings?
 
