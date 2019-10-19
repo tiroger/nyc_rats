@@ -1,0 +1,297 @@
+/* font converted using font-converter.net. thank you! */
+@font-face {
+  font-family: "SewerRat";
+  src: url("./fonts/sewerrat.eot"); /* IE9 Compat Modes */
+  src: url("./fonts/sewerrat.eot?#iefix") format("embedded-opentype"), /* IE6-IE8 */
+    url("./fonts/sewerrat.otf") format("opentype"), /* Open Type Font */
+    url("./fonts/sewerrat.svg") format("svg"), /* Legacy iOS */
+    url("./fonts/sewerrat.ttf") format("truetype"), /* Safari, Android, iOS */
+    url("./fonts/sewerrat.woff") format("woff"), /* Modern Browsers */
+    url("./fonts/sewerrat.woff2") format("woff2"); /* Modern Browsers */
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+    font-family: "Avenir"
+}
+
+#emphasis {
+    font-family: "SewerRat";
+    font-size: 0px;
+    color: #850B00;
+    
+}
+.content {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.jumbotron {
+    background-color: #850B00;
+    /* background: url("https://image.flaticon.com/icons/svg/47/47240.svg"); */
+    background-repeat: no-repeat;
+    background-size: auto;
+}
+
+/* .jumbotron {
+    padding: 100px;
+    background: url("http://moveablefest.com/wp-content/uploads/2018/07/CarlenMayMannTheRat.jpg");
+    background-repeat: no-repeat;
+    background-size: auto;
+} */
+
+@import url(https://fonts.googleapis.com/css?family=Denk+One);
+
+@dark-gray: #212121;
+
+@red: 255;
+@green: 0;
+@blue: 0;
+
+body {
+    background-color: @dark-gray;
+}
+
+.rat {
+    width: 20%;
+    height: auto;
+    position: relative;
+}
+
+h1 {
+    color: transparent;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    font-family: 'Denk One', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 5em;
+        width: 60%;
+        height: auto;
+
+    position: relative;
+    left: 30%;
+    /* top: 100%; */
+    margin-right: 10px;
+
+    -webkit-animation: horror-animation 5s infinite;
+    -moz-animation: horror-animation 5s infinite;
+    -o-animation: horror-animation 5s infinite;
+    animation: horror-animation 5s infinite;
+}
+
+h2 {
+    font-family: 'SewerRat';
+    font-size: 150%
+}
+
+h4 {
+    font-family: 'Avenir';
+    font-size: 130%;
+    font-weight: lighter;
+}
+
+
+@-webkit-keyframes horror-animation {
+    .mixi-frames;
+}
+
+@-moz-keyframes horror-animation {
+    .mixi-frames;
+}
+
+@-o-keyframes horror-animation {
+    .mixi-frames;
+}
+
+@keyframes horror-animation {
+    .mixi-frames;
+}
+
+.mixi-frames () {
+    0% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.1);
+        left: 51%;
+        top: 36%;
+    }
+
+    5% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.2);
+        left: 50%;
+        top: 35%;
+    }
+
+    10% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.3);
+        left: 49%;
+        top: 34%;
+    }
+
+    15% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.4);
+        left: 50%;
+        top: 35%;
+    }
+
+    16% {
+        text-shadow: 0 0 5px @dark-gray;
+        left: 50%
+    }
+
+    17% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.4);
+        left: 50%;
+    }
+
+    20% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.5);
+        left: 49%
+    }
+
+    25% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.6);
+        left: 49%
+    }
+
+    30% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.7);
+        left: 50%
+    }
+
+    35% {
+        text-shadow: 0 0 5px rgba(@red, @green, @blue, 0.8);
+        left: 50%
+    }
+
+    36% {
+        text-shadow: 0 0 5px @dark-gray;
+        left: 50%
+    }
+
+    37% {
+        text-shadow: 0 0 5px rgba(@red, @green, @blue, 0.8);
+        left: 50%
+    }
+
+    40% {
+        text-shadow: 0 0 5px rgba(@red, @green, @blue, 0.9);
+        left: 51%
+    }
+
+    45% {
+        text-shadow: 0 0 5px rgba(@red, @green, @blue, 0.8);
+        left: 51%
+    }
+
+    50% {
+        text-shadow: 0 0 5px rgba(@red, @green, @blue, 0.7);
+        left: 51%
+    }
+
+    55% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.6);
+        left: 50%
+    }
+
+    56% {
+        text-shadow: 0 0 5px @dark-gray;
+        left: 50%
+    }
+
+    57% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.6);
+        left: 52%
+    }
+
+    60% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.5);
+        left: 50%
+    }
+
+    65% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.4);
+        left: 50%
+    }
+
+    70% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.3);
+        left: 49%
+    }
+
+    75% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.2);
+        left: 49%
+    }
+
+    76% {
+        text-shadow: 0 0 5px @dark-gray;
+        left: 50%
+    }
+
+    77% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.2);
+        left: 49%
+    }
+
+    80% {
+        text-shadow: 0 0 5px rgba(@red, @green, @blue, 0.1);
+        left: 49%
+    }
+
+    85% {
+        text-shadow: 0 0 5px rgba(@red, @green, @blue, 0.2);
+        left: 51%
+    }
+
+    86% {
+        text-shadow: 0 0 5px @dark-gray;
+        left: 50%
+    }
+
+    87% {
+        text-shadow: 0 0 5px rgba(@red, @green, @blue, 0.2);
+        left: 51%
+    }
+
+    90% {
+        text-shadow: 0 0 5px rgba(@red, @green, @blue, 0.3);
+        left: 51%
+    }
+
+    95% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.4);
+        left: 51%
+    }
+
+    100% {
+        text-shadow: 0 0 10px rgba(@red, @green, @blue, 0.5);
+        left: 50%
+    }
+}
+
+/* p::first-letter {
+    font-size: 200%;
+    font-weight: bold;
+    color: #850B00;
+    line-height: normal;
+} */
+
+#first-letter::first-letter {
+    color: #850B00;
+    float: left;
+    font-family: 'Avenir';
+    font-size: 80px;
+    line-height: 60px;
+    padding-top: 4px;
+    padding-right: 8px;
+    padding-left: 3px;
+}
+
+#finger-down {
+    margin-left: 200px;
+}
+
+#finger-right {
+    margin-left: 300px;
+    margin-down: 100px;
+}

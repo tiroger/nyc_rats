@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>NYC Rat Sightings</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- Our CSSS -->
+    <link href="./static/css/style.css" rel='stylesheet' type='text/css'>
+
+    <!-- Fonts -->
+    <script src='http://use.edgefonts.net/butcherman.js'></script>
+
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+    <script>
+        window.fitText(document.getElementById("display-4"));
+    </script>
+</head>
+<body>
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container-fluid">
+        <img id="animate" src="Figures/rat.svg" class="rat">
+        <h1 class="display-4">Rats! Coming to a city near you...</h1>
+        <p class="lead"></p>
+    </div>
+</div>
+
+<script>
+$(document).ready(function(e) {
+    var width = $(document).width();
+
+    function goRight() {
+        $("#animate").animate({
+        left: width
+      }, 5000, function() {
+         setTimeout(goLeft, 50);
+      });
+    }
+    function goLeft() {
+        $("#animate").animate({
+        left: 0
+      }, 5000, function() {
+         setTimeout(goRight, 50);
+      });
+    }
+    setTimeout(goRight, 50);
+});
+</script>
+
+
+<div class="content">
+
+
+<!-- Stack the columns on mobile by making one full-width and the other half-width -->
+<div class="row">
+    <div class="col-12 col-md-12">
+        <h2>Introduction</h2>
+        <p id="first-letter">
+            Spend any significant amount of time in New York City (NYC), and you will very likely come across a rat, whether waiting
+            for the subway or just strolling through the streets. If you are from NYC, none of this is new to you. In fact, rats are so prevalent in NYC that there is an urban legend that there are as many rats as people in NYC. This erroneous claim stems from a study of rats conducted in England by W.R. Boelter and published in 1909 under the title <i>The Rat Problem</i>. After surveying the English countryside (but not villages, towns, or cities) he came up with an educated guess, estimating that England had one rat per acre of cultivated land. Since England had 40 million acres of cultivated land at the time, Boelter pegged the country’s rat population at 40 million. And since England also had a human population of 40 million at the time, he surmised that there is a 1:1 ratio of people to rats. The hypothesis was erroneously applied to NYC and is widely quoted to this day. 
+        </p>
+        <p>
+            The exact number of rats is difficult to estimate, However, a <a href="https://rss.onlinelibrary.wiley.com/doi/full/10.1111/j.1740-9713.2014.00764.x">study</a> published by Jonathan Auerbach in 2014 estimated the rat population at about ~2 million, far below the human population of ~8.5 million at the time of the study. Regardless of the number, rats pose a significant health and safety hazard, as they can spread a number of potentially <a href="https://www.cdc.gov/rodents/diseases/direct.html">lethal diseases</a> or chew through wires, potentially resulting in <a href="https://pestusa.com/news/rodents-the-fire-hazard-you-never-considered">fires</a>. In an effort to help regulate the rodent population, the city encourages its inhabitants to call 311 to report rat sightings. This data set provided by the city of New York detailing all rat sightings since January of 2010.
+        </p>
+        <hr>
+    </div>
+</div>
+</div>
+<!-- Columns start at 50% wide on mobile and bump up to 33.3% wide on desktop -->
+<div class="content">
+<div class="row">
+    <div class="col-6 col-md-4">
+        <h2>NYC's Rat Problem</h2>
+        <p><h4 class="description">The number of rat sightings has steadily increased since 2010, peaking in 2017.</h4><img id="finger-right" src="./static/imgs/pointing-right-finger-svgrepo-com.svg" alt="Smiley face" height="50" width="50"></img></p>
+        <img id="finger-right" src="./static/imgs/pointing-right-finger-svgrepo-com.svg" alt="Finger Right" height="50" width="50"></img>
+        <p><h4 class="description">Rat sightings are significantly higher in summer months.</p></ul>
+        <hr>
+        <br>
+        <br>
+        <br>
+        <p><h4 class="description">In June 2017, the De Blasio administration announced a $32 million neighborhood rat reduction plan that targets the three most infested parts of city: the Grand Concourse area, Chinatown/East Village/Lower East Side and Bushwick/Bedford-Stuyvesant.</p></ul>
+        <img id="finger-down" src="./static/imgs/pointing-down-finger-svgrepo-com.svg" alt="Finger Down" height="50" width="50"></img>
+    </div>
+    <p></p>
+    <div class="col-6 col-md-8">
+                <div>
+            <div class='tableauPlaceholder' id='viz1571448237909' style='position: relative'><noscript><a href='#'><img alt=' '
+                            src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingssince2010&#47;1_rss.png'
+                            style='border: none' /></a></noscript><object class='tableauViz' style='display:none;'>
+                    <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+                    <param name='embed_code_version' value='3' />
+                    <param name='site_root' value='' />
+                    <param name='name' value='RatSightings_15714395971100&#47;RatSightingssince2010' />
+                    <param name='tabs' value='no' />
+                    <param name='toolbar' value='yes' />
+                    <param name='static_image'
+                        value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingssince2010&#47;1.png' />
+                    <param name='animate_transition' value='yes' />
+                    <param name='display_static_image' value='yes' />
+                    <param name='display_spinner' value='yes' />
+                    <param name='display_overlay' value='yes' />
+                    <param name='display_count' value='yes' /></object></div>
+            <script
+                type='text/javascript'>                    var divElement = document.getElementById('viz1571448237909'); var vizElement = divElement.getElementsByTagName('object')[0]; vizElement.style.width = '100%'; vizElement.style.height = (divElement.offsetWidth * 0.75) + 'px'; var scriptElement = document.createElement('script'); scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js'; vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script>
+        </div>
+    </div>
+</div>
+<hr>
+</div>
+<div class="content">
+
+<!-- Columns are always 50% wide, on mobile and desktop -->
+<div class="row">
+    <div class="col-6"><div class='tableauPlaceholder' id='viz1571463488632' style='position: relative'><noscript><a href='#'><img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='RatSightings_15714395971100&#47;RatSightingsChoropleth' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='filter' value='publish=yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1571463488632');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script></div>
+    
+    <iframe
+    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d24201.288968175206!2d-73.94473004091309!3d40.69244902736092!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25c0c2cbdfe7b%3A0x7ea26108ba5f76fa!2sBrooklyn%2C%20NY%2011221!5e0!3m2!1sen!2sus!4v1571494605834!5m2!1sen!2sus"
+    width="600" height="450" frameborder="0" style="border:0;" allowfullscreen=""></iframe>
+</div>
+<hr>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+VIZß
+    <div class="col">
+      2 of 2
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      1 of 3
+    </div>
+    <div class="col">
+      2 of 3
+    </div>
+    <div class="col">
+      3 of 3
+    </div>
+  </div>
+</div>
+
+
+    
+</body>
+</html>
