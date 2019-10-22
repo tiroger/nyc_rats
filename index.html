@@ -18,6 +18,10 @@
 
     <!-- JQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.js"
+      integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+      <script src="jquery.rotator.js"></script>
+
 
     <script>
         window.fitText(document.getElementById("display-4"));
@@ -27,7 +31,9 @@
 
 <div class="jumbotron jumbotron-fluid">
     <div class="container-fluid">
-        <img id="animate" src="Figures/rat.svg" class="rat">
+        <img id="animate"
+          src="https://static01.nyt.com/newsgraphics/2019/05/15/rat/38f6336aecd35710b165133a357a86e07a8e40bd/rat-running.gif"
+          class="rat">
         <h1 class="display-4">Rats! Coming to a city near you...</h1>
         <p class="lead"></p>
     </div>
@@ -44,6 +50,7 @@ $(document).ready(function(e) {
          setTimeout(goLeft, 50);
       });
     }
+
     function goLeft() {
         $("#animate").animate({
         left: 0
@@ -77,7 +84,7 @@ $(document).ready(function(e) {
 <!-- Columns start at 50% wide on mobile and bump up to 33.3% wide on desktop -->
 <div class="content">
 <div class="row">
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-sm-4">
         <h2>NYC's Rat Problem</h2>
         <p><h4 class="description">The number of rat sightings has steadily increased since 2010, peaking in 2017.</h4><img id="finger-right" src="./static/imgs/pointing-right-finger-svgrepo-com.svg" alt="Smiley face" height="50" width="50"></img></p>
         <img id="finger-right" src="./static/imgs/pointing-right-finger-svgrepo-com.svg" alt="Finger Right" height="50" width="50"></img>
@@ -90,7 +97,7 @@ $(document).ready(function(e) {
         <img id="finger-down" src="./static/imgs/pointing-down-finger-svgrepo-com.svg" alt="Finger Down" height="50" width="50"></img>
     </div>
     <p></p>
-    <div class="col-6 col-md-8">
+    <div class="col-6 col-sm-8">
                 <div>
             <div class='tableauPlaceholder' id='viz1571448237909' style='position: relative'><noscript><a href='#'><img alt=' '
                             src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingssince2010&#47;1_rss.png'
@@ -100,7 +107,7 @@ $(document).ready(function(e) {
                     <param name='site_root' value='' />
                     <param name='name' value='RatSightings_15714395971100&#47;RatSightingssince2010' />
                     <param name='tabs' value='no' />
-                    <param name='toolbar' value='yes' />
+                    <param name='toolbar' value='no' />
                     <param name='static_image'
                         value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingssince2010&#47;1.png' />
                     <param name='animate_transition' value='yes' />
@@ -119,7 +126,7 @@ $(document).ready(function(e) {
 
 <!-- Columns are always 50% wide, on mobile and desktop -->
 <div class="row">
-    <div class="col-6"><div class='tableauPlaceholder' id='viz1571463488632' style='position: relative'><noscript><a href='#'><img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='RatSightings_15714395971100&#47;RatSightingsChoropleth' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='filter' value='publish=yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1571463488632');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script></div>
+    <div class="col-sm-6"><div class='tableauPlaceholder' id='viz1571463488632' style='position: relative'><noscript><a href='#'><img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='RatSightings_15714395971100&#47;RatSightingsChoropleth' /><param name='tabs' value='no' /><param name='toolbar' value='no' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='filter' value='publish=yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1571463488632');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script></div>
     
     <iframe
     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d24201.288968175206!2d-73.94473004091309!3d40.69244902736092!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25c0c2cbdfe7b%3A0x7ea26108ba5f76fa!2sBrooklyn%2C%20NY%2011221!5e0!3m2!1sen!2sus!4v1571494605834!5m2!1sen!2sus"
