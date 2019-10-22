@@ -51,13 +51,13 @@ $(document).ready(function(e) {
       });
     }
 
-    function goLeft() {
-        $("#animate").animate({
-        left: 0
-      }, 5000, function() {
-         setTimeout(goRight, 50);
-      });
-    }
+    // function goLeft() {
+    //     $("#animate").animate({
+    //     left: 0
+    //   }, 5000, function() {
+    //      setTimeout(goRight, 50);
+    //   });
+    // }
     setTimeout(goRight, 50);
 });
 </script>
@@ -85,18 +85,44 @@ $(document).ready(function(e) {
 <div class="content">
 <div class="row">
     <div class="col-6 col-sm-4">
-        <h2>NYC's Rat Problem</h2>
-        <p><h4 class="description">The number of rat sightings has steadily increased since 2010, peaking in 2017.</h4><img id="finger-right" src="./static/imgs/pointing-right-finger-svgrepo-com.svg" alt="Smiley face" height="50" width="50"></img></p>
-        <img id="finger-right" src="./static/imgs/pointing-right-finger-svgrepo-com.svg" alt="Finger Right" height="50" width="50"></img>
-        <p><h4 class="description">Rat sightings are significantly higher in summer months.</p></ul>
+        <h2>Rising rat population     <img id="
+              finger-right" src="./static/imgs/pointing-right-finger-svgrepo-com.svg" alt="finger-right" height="50"
+            width="50"></img></h2>
+        <p>
+          <p class="description">Reports of rat sightings have steadily increased since 2010, with Brooklyn leading the
+            charge, followed by Manhattan and the Bronx. There is clear trend showing a steep increase in the number of
+            reported sightings in the warmer months, peaking in July - the optimal <a
+              href="https://www.jax.org/jax-mice-and-services/customer-support/technical-support/breeding">breeding
+              temperature</a> for rats is between 65 and 75F. </p>
+        </p>
         <hr>
-        <br>
-        <br>
-        <br>
-        <p><h4 class="description">In June 2017, the De Blasio administration announced a $32 million neighborhood rat reduction plan that targets the three most infested parts of city: the Grand Concourse area, Chinatown/East Village/Lower East Side and Bushwick/Bedford-Stuyvesant.</p></ul>
+        <h2>A Brooklyn and Manhattan infestation</h2>
+        <p>
+          <p class="description">
+            <h5>Manhattan - ZIP Code 10025:</h5>
+
+            Rats are running wild in this fancy area on the Upper West side of Manhattan. With the Hudson River and
+            Central Park as borders, the area is home to the fraternities at Columbia University and many millionaires.
+            In fact, the median home value is $934,000.
+
+            Rats love it too. It ranked number three for rat sightings by ZIP code. There were over 3,0000 instances of rats
+            reported since 2010.
+            <br>
+            <br>
+            <h5>Brooklyn - ZIP Codes 11221, 11216, and 11238:</h5>
+
+            Brooklyn is gentrifying and with the destruction of their burrows and homes – rats are popping up all over.
+            The most rat sightings occurred in the Brooklyn borough.
+
+            Here are some of the leading areas within Brooklyn:
+
+            Since 2010, more than 3,800 rat sightings were reported in ZIP code 11221. There are nearly 80,000 people
+            living in this area and the median home value is $543,800.
+
+            Rat sightings were reported 3,145 times within ZIP code 11216 – an area that borders ZIP code 11221. There
+            are 54,000 people living in this area and the median home value is nearly $623,000.</p>
         <img id="finger-down" src="./static/imgs/pointing-down-finger-svgrepo-com.svg" alt="Finger Down" height="50" width="50"></img>
     </div>
-    <p></p>
     <div class="col-6 col-sm-8">
                 <div>
             <div class='tableauPlaceholder' id='viz1571448237909' style='position: relative'><noscript><a href='#'><img alt=' '
@@ -119,44 +145,181 @@ $(document).ready(function(e) {
                 type='text/javascript'>                    var divElement = document.getElementById('viz1571448237909'); var vizElement = divElement.getElementsByTagName('object')[0]; vizElement.style.width = '100%'; vizElement.style.height = (divElement.offsetWidth * 0.75) + 'px'; var scriptElement = document.createElement('script'); scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js'; vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script>
         </div>
     </div>
+    <hr>
 </div>
-<hr>
-</div>
+<!-- end of content div -->
+</div> 
 <div class="content">
-
-<!-- Columns are always 50% wide, on mobile and desktop -->
 <div class="row">
-    <div class="col-sm-6"><div class='tableauPlaceholder' id='viz1571463488632' style='position: relative'><noscript><a href='#'><img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='RatSightings_15714395971100&#47;RatSightingsChoropleth' /><param name='tabs' value='no' /><param name='toolbar' value='no' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='filter' value='publish=yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1571463488632');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script></div>
-    
-    <iframe
-    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d24201.288968175206!2d-73.94473004091309!3d40.69244902736092!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25c0c2cbdfe7b%3A0x7ea26108ba5f76fa!2sBrooklyn%2C%20NY%2011221!5e0!3m2!1sen!2sus!4v1571494605834!5m2!1sen!2sus"
-    width="600" height="450" frameborder="0" style="border:0;" allowfullscreen=""></iframe>
-</div>
-<hr>
-</div>
-
-<div class="container">
-  <div class="row">
-    <div class="col">
-      <!-- VIZß -->
-    <div class="col">
-      <!-- 2 of 2 -->
+  <div class="col-6 col-sm-6">
+    <div class='tableauPlaceholder' id='viz1571463488632' style='position: relative'><noscript><a href='#'><img alt=' '
+            src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1_rss.png'
+            style='border: none' /></a></noscript><object class='tableauViz' style='display:none;'>
+        <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+        <param name='embed_code_version' value='3' />
+        <param name='site_root' value='' />
+        <param name='name' value='RatSightings_15714395971100&#47;RatSightingsChoropleth' />
+        <param name='tabs' value='no' />
+        <param name='toolbar' value='no' />
+        <param name='static_image'
+          value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsChoropleth&#47;1.png' />
+        <param name='animate_transition' value='yes' />
+        <param name='display_static_image' value='yes' />
+        <param name='display_spinner' value='yes' />
+        <param name='display_overlay' value='yes' />
+        <param name='display_count' value='yes' />
+        <param name='filter' value='publish=yes' /></object></div>
+    <script type='text/javascript'>
+      var divElement = document.getElementById('viz1571463488632');
+      var vizElement = divElement.getElementsByTagName('object')[0];
+      vizElement.style.width = '100%';
+      vizElement.style.height = (divElement.offsetWidth * 0.60) + 'px';
+      var scriptElement = document.createElement('script');
+      scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+      vizElement.parentNode.insertBefore(scriptElement, vizElement);
+    </script>
+  </div>
+  <div class="col-6 col-sm-6">
+    <div class='tableauPlaceholder' id='viz1571759321089' style='position: relative'><noscript><a href='#'><img alt=' '
+            src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;F8&#47;F8RQZ7P5Y&#47;1_rss.png'
+            style='border: none' /></a></noscript><object class='tableauViz' style='display:none;'>
+        <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+        <param name='embed_code_version' value='3' />
+        <param name='path' value='shared&#47;F8RQZ7P5Y' />
+        <param name='toolbar' value='no' />
+        <param name='static_image'
+          value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;F8&#47;F8RQZ7P5Y&#47;1.png' />
+        <param name='animate_transition' value='yes' />
+        <param name='display_static_image' value='yes' />
+        <param name='display_spinner' value='yes' />
+        <param name='display_overlay' value='yes' />
+        <param name='display_count' value='yes' /></object></div>
+    <script type='text/javascript'>
+      var divElement = document.getElementById('viz1571759321089');
+      var vizElement = divElement.getElementsByTagName('object')[0];
+      vizElement.style.width = '100%';
+      vizElement.style.height = (divElement.offsetWidth * 0.60) + 'px';
+      var scriptElement = document.createElement('script');
+      scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+      vizElement.parentNode.insertBefore(scriptElement, vizElement);
+    </script>
+  </div>
+  </div>
+  <div class="col-6 col-sm-12">
+    <div>
+    <div class='tableauPlaceholder' id='viz1571755772749' style='position: relative'><noscript><a href='#'><img alt=' '
+            src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsperzipcode&#47;1_rss.png'
+            style='border: none' /></a></noscript><object class='tableauViz' style='display:none;'>
+        <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+        <param name='embed_code_version' value='3' />
+        <param name='site_root' value='' />
+        <param name='name' value='RatSightings_15714395971100&#47;RatSightingsperzipcode' />
+        <param name='tabs' value='no' />
+        <param name='toolbar' value='yes' />
+        <param name='static_image'
+          value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsperzipcode&#47;1.png' />
+        <param name='animate_transition' value='yes' />
+        <param name='display_static_image' value='yes' />
+        <param name='display_spinner' value='yes' />
+        <param name='display_overlay' value='yes' />
+        <param name='display_count' value='yes' /></object></div>
+    <script type='text/javascript'>
+      var divElement = document.getElementById('viz1571755772749');
+      var vizElement = divElement.getElementsByTagName('object')[0];
+      vizElement.style.width = '100%';
+      vizElement.style.height = (divElement.offsetWidth * 0.30) + 'px';
+      var scriptElement = document.createElement('script');
+      scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+      vizElement.parentNode.insertBefore(scriptElement, vizElement);
+    </script>
     </div>
   </div>
+  <hr>
+</div> 
+
+<!-- Columns start at 50% wide on mobile and bump up to 33.3% wide on desktop -->
+<div class="content">
   <div class="row">
-    <div class="col">
-      <!-- 1 of 3 -->
+    <div class="col-6 col-sm-6">
+<div class='tableauPlaceholder' id='viz1571761647161' style='position: relative'><noscript><a href='#'><img alt=' '
+        src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsperyearperborough&#47;1_rss.png'
+        style='border: none' /></a></noscript><object class='tableauViz' style='display:none;'>
+    <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+    <param name='embed_code_version' value='3' />
+    <param name='site_root' value='' />
+    <param name='name' value='RatSightings_15714395971100&#47;RatSightingsperyearperborough' />
+    <param name='tabs' value='no' />
+    <param name='toolbar' value='no' />
+    <param name='static_image'
+      value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;RatSightingsperyearperborough&#47;1.png' />
+    <param name='animate_transition' value='yes' />
+    <param name='display_static_image' value='yes' />
+    <param name='display_spinner' value='yes' />
+    <param name='display_overlay' value='yes' />
+    <param name='display_count' value='yes' /></object></div>
+<script type='text/javascript'>
+  var divElement = document.getElementById('viz1571761647161');
+  var vizElement = divElement.getElementsByTagName('object')[0];
+  vizElement.style.width = '100%';
+  vizElement.style.height = (divElement.offsetWidth * 0.75) + 'px';
+  var scriptElement = document.createElement('script');
+  scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+  vizElement.parentNode.insertBefore(scriptElement, vizElement);
+</script>
     </div>
-    <div class="col">
-      <!-- 2 of 3 -->
+    <div class="col-6 col-sm-2">
+      <div class='tableauPlaceholder' id='viz1571761704450' style='position: relative'><noscript><a href='#'><img
+              alt=' '
+              src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;YoYChangethourghmay&#47;1_rss.png'
+              style='border: none' /></a></noscript><object class='tableauViz' style='display:none;'>
+          <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+          <param name='embed_code_version' value='3' />
+          <param name='site_root' value='' />
+          <param name='name' value='RatSightings_15714395971100&#47;YoYChangethourghmay' />
+          <param name='tabs' value='no' />
+          <param name='toolbar' value='no' />
+          <param name='static_image'
+            value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;Ra&#47;RatSightings_15714395971100&#47;YoYChangethourghmay&#47;1.png' />
+          <param name='animate_transition' value='yes' />
+          <param name='display_static_image' value='yes' />
+          <param name='display_spinner' value='yes' />
+          <param name='display_overlay' value='yes' />
+          <param name='display_count' value='yes' /></object></div>
+      <script type='text/javascript'>
+        var divElement = document.getElementById('viz1571761704450');
+        var vizElement = divElement.getElementsByTagName('object')[0];
+        vizElement.style.width = '100%';
+        vizElement.style.height = (divElement.offsetWidth * 2.47) + 'px';
+        var scriptElement = document.createElement('script');
+        scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+        vizElement.parentNode.insertBefore(scriptElement, vizElement);
+      </script>
     </div>
-    <div class="col">
-      <!-- 3 of 3 -->
+    <div class="col-6 col-sm-4">
+      <div class="row">
+        <div class col><img id="finger-left" src="./static/imgs/pointing-left-hand-svgrepo-com.svg" alt="finger-left"
+            height="50" width="50"></div>
+        <div class col>
+          <h2 id="fighting">Fighting back</h2></img>
+        </div>
+      </div>
+      <p>
+        <p class="description">In 2017, Mayor de Blasio, calling for “more rat corpses,” unveiled a <a
+            href="https://www1.nyc.gov/office-of-the-mayor/news/472-17/de-blasio-administration-32-million-neighborhood-rat-reduction-plan#/0">$32
+            million assault on rats</a>, which included increased litter basket pickups, the deployment of solar-powered, trash compacting binsand rat-resistant steel cans. The plan also called for using dry ice to smother rats where they live. But after dropping in 2018, rat sightings are once again on the upswing in Manhattan and Brooklyn, as of May 2019.</p>
+      </p>
+      <hr>
     </div>
+    <hr>
   </div>
+  <!-- end of content div -->
 </div>
 
-
-    
+<!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+  integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+  integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+  integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </body>
 </html>

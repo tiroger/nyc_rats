@@ -23,7 +23,7 @@ body {
     
 }
 .content {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: auto;
 }
 
@@ -82,7 +82,7 @@ h1 {
 
 h2 {
     font-family: 'SewerRat';
-    font-size: 150%
+    font-size: 110%
 }
 
 h4 {
@@ -292,6 +292,14 @@ h4 {
 }
 
 #finger-right {
-    margin-left: 300px;
+    margin-left: 100px;
     margin-down: 100px;
+}
+
+#finger-left {
+    margin-right: 20px;
+}
+
+#fighting {
+    margin-top: 20px;
 }
