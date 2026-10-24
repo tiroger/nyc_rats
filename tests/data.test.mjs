@@ -2,14 +2,73 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { geoArea, geoMercator, geoPath } from 'd3';
-import { BOROUGHS, monthOffset, monthSequence, presetRange, summarize, validateSnapshot, forD3 } from '../src/lib/data.mjs';
+import { BOROUGHS, SIGHTING_FILTER, monthOffset, monthSequence, periodMetrics, presetRange, summarize, validateSnapshot, forD3 } from '../src/lib/data.mjs';
+import { verifySourceAudit } from '../scripts/lib/audit.mjs';
 
 const fixture = () => ({
   schemaVersion: 1, generatedAt: '2026-10-23T12:00:00Z',
+  filter: SIGHTING_FILTER,
   coverage: { from: '2025-12-01', to: '2026-02-12' }, boroughs: BOROUGHS,
   sources: [{ id: '76ig-c548', url: 'https://data.cityofnewyork.us/d/76ig-c548', reports: 0 }, { id: 'erm2-nwe9', url: 'https://data.cityofnewyork.us/d/erm2-nwe9', reports: 15 }],
   totalReports: 15,
   rows: [['2025-12', 1, '11221', 7], ['2026-02', 1, '', 3], ['2026-02', 2, '10025', 4], ['2026-02', 5, 'invalid', 1]],
+});
+
+test('selected-period peaks are distinct from the historical record', () => {
+  const data = {
+    coverage: { from: '2022-06-01', to: '2026-10-23' },
+    rows: [['2022-06', 1, '11221', 3019], ['2026-08', 1, '11221', 2139], ['2026-10', 1, '11221', 1373]],
+  };
+  const recent = periodMetrics(summarize(data, ...presetRange('12m', data.coverage)), data.coverage);
+  const historical = periodMetrics(summarize(data, ...presetRange('all', data.coverage)), data.coverage);
+  assert.equal(recent.peakMonths[0].month, '2026-08');
+  assert.equal(historical.peakMonths[0].month, '2022-06');
+  assert.equal(historical.peakCount, 3019);
+});
+
+test('monthly pace excludes the provisional month and includes zero-report complete months', () => {
+  const data = fixture();
+  const metrics = periodMetrics(summarize(data, '2025-12', '2026-02'), data.coverage);
+  assert.equal(metrics.monthlyAverage, 3.5);
+  assert.equal(metrics.completeMonths.length, 2);
+  assert.equal(periodMetrics(summarize(data, '2026-02', '2026-02'), data.coverage).monthlyAverage, null);
+  assert.equal(periodMetrics(summarize(data, '2025-12', '2025-12'), data.coverage).monthlyAverage, 7);
+});
+
+test('tied peak months and empty periods do not imply a unique busiest month', () => {
+  const coverage = fixture().coverage;
+  const tied = periodMetrics({ months: [{ month: '2025-12', count: 7 }, { month: '2026-01', count: 7 }] }, coverage);
+  assert.equal(tied.peakMonths.length, 2);
+  const empty = periodMetrics({ months: [{ month: '2026-01', count: 0 }] }, coverage);
+  assert.equal(empty.peakMonths.length, 0);
+  assert.equal(empty.monthlyAverage, 0);
+});
+
+test('independent source checks catch balanced month/ZIP errors that preserve overall totals', () => {
+  const data = fixture();
+  const audit = {
+    totals: [{ reports: '15', distinct_reports: '15' }],
+    monthlyBorough: [
+      { month: '2025-12', borough: 'BROOKLYN', reports: '7' },
+      { month: '2026-02', borough: 'BROOKLYN', reports: '3' },
+      { month: '2026-02', borough: 'MANHATTAN', reports: '4' },
+      { month: '2026-02', borough: 'Unspecified', reports: '1' },
+    ],
+    monthlyZip: [
+      { month: '2025-12', incident_zip: '11221', reports: '7' },
+      { month: '2026-02', reports: '3' },
+      { month: '2026-02', incident_zip: '10025', reports: '4' },
+      { month: '2026-02', incident_zip: 'invalid', reports: '1' },
+    ],
+  };
+  assert.equal(verifySourceAudit(data, 'erm2-nwe9', audit).reports, 15);
+  const moved = structuredClone(audit);
+  moved.monthlyZip[0].reports = '6';
+  moved.monthlyZip[1].reports = '4';
+  assert.throws(() => verifySourceAudit(data, 'erm2-nwe9', moved), /monthly\/ZIP totals mismatch/);
+  const duplicate = structuredClone(audit);
+  duplicate.totals[0].distinct_reports = '14';
+  assert.throws(() => verifySourceAudit(data, 'erm2-nwe9', duplicate), /unique-ID count mismatch/);
 });
 
 test('missing geography remains in totals and zero-report months remain on the timeline', () => {

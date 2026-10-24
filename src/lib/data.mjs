@@ -1,6 +1,7 @@
 export const BOROUGHS = ['Bronx', 'Brooklyn', 'Manhattan', 'Queens', 'Staten Island', 'Unspecified'];
 export const COLORS = { Bronx: '#c96747', Brooklyn: '#497564', Manhattan: '#d3a444', Queens: '#7b78a5', 'Staten Island': '#608a9c', Unspecified: '#8a8b7e' };
 export const SOURCE_IDS = ['76ig-c548', 'erm2-nwe9'];
+export const SIGHTING_FILTER = { complaint_type: 'Rodent', descriptor: 'Rat Sighting' };
 export const number = new Intl.NumberFormat('en-US');
 export const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
 
@@ -49,10 +50,24 @@ export function summarize(data, start, end, borough = 'All NYC') {
   return { total, months, byBorough, zips: [...zips.values()].map(({ boroughCounts, ...entry }) => ({ ...entry, borough: Object.entries(boroughCounts).sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => b.count - a.count) };
 }
 
+export function periodMetrics(summary, coverage) {
+  // Treat the latest source month as provisional, including late-arriving records.
+  const completeMonths = summary.months.filter(r => r.month < coverage.to.slice(0, 7));
+  const peakCount = Math.max(0, ...summary.months.map(r => r.count));
+  const peakMonths = peakCount ? summary.months.filter(r => r.count === peakCount) : [];
+  return {
+    completeMonths,
+    monthlyAverage: completeMonths.length ? completeMonths.reduce((sum, r) => sum + r.count, 0) / completeMonths.length : null,
+    peakCount,
+    peakMonths,
+  };
+}
+
 export function validateSnapshot(data) {
   if (data.schemaVersion !== 1 || !Array.isArray(data.rows) || !data.rows.length) throw new Error('Missing or unsupported data snapshot');
   if (!Number.isFinite(Date.parse(data.generatedAt)) || !Number.isFinite(Date.parse(data.coverage?.from)) || !Number.isFinite(Date.parse(data.coverage?.to))) throw new Error('Invalid snapshot dates');
   if (data.coverage.from > data.coverage.to) throw new Error('Reversed coverage dates');
+  if (JSON.stringify(data.filter) !== JSON.stringify(SIGHTING_FILTER)) throw new Error('Unexpected report definition');
   if (JSON.stringify(data.boroughs) !== JSON.stringify(BOROUGHS)) throw new Error('Unexpected borough index');
   const keys = new Set();
   let total = 0;
@@ -66,7 +81,8 @@ export function validateSnapshot(data) {
     total += count;
   }
   if (total !== data.totalReports) throw new Error('Snapshot totals do not reconcile');
-  for (const id of SOURCE_IDS) if (!data.sources?.some(s => s.id === id && s.url?.startsWith('https://data.cityofnewyork.us/'))) throw new Error(`Missing source ${id}`);
+  if (!Array.isArray(data.sources) || data.sources.length !== SOURCE_IDS.length || new Set(data.sources.map(s => s.id)).size !== SOURCE_IDS.length) throw new Error('Unexpected source list');
+  for (const id of SOURCE_IDS) if (!data.sources.some(s => s.id === id && s.url?.startsWith('https://data.cityofnewyork.us/') && Number.isSafeInteger(s.reports) && s.reports >= 0)) throw new Error(`Missing or invalid source ${id}`);
   if (data.sources.reduce((sum, s) => sum + s.reports, 0) !== total) throw new Error('Source totals do not reconcile');
   return total;
 }

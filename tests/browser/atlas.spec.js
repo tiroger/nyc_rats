@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFile } from 'node:fs/promises';
+import { summarize, periodMetrics, presetRange, monthLabel, number } from '../../src/lib/data.mjs';
+
+const snapshot = JSON.parse(await readFile(new URL('../../public/data/sightings.json', import.meta.url), 'utf8'));
 
 test('atlas loads without runtime errors, filters reports, and survives a shared-link reload', async ({ page }) => {
   const errors = [];
@@ -56,4 +60,26 @@ test('atlas has no serious accessibility violations', async ({ page }) => {
   await page.getByTestId('total-reports').waitFor();
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
   expect(results.violations.map(v => ({ id: v.id, description: v.description, nodes: v.nodes.map(n => ({ target: n.target, summary: n.failureSummary })) }))).toEqual([]);
+});
+
+test('peak labels distinguish the selected period from the historical record and average only complete months', async ({ page }) => {
+  const recent = summarize(snapshot, ...presetRange('12m', snapshot.coverage));
+  const recentMetrics = periodMetrics(recent, snapshot.coverage);
+  const history = periodMetrics(summarize(snapshot, ...presetRange('all', snapshot.coverage)), snapshot.coverage);
+  await page.goto('./');
+  await expect(page.getByTestId('total-reports')).toHaveText(number.format(recent.total));
+  await expect(page.getByTestId('peak-month')).toContainText(monthLabel(recentMetrics.peakMonths[0].month, true));
+  await expect(page.getByTestId('monthly-average')).toContainText(number.format(Math.round(recentMetrics.monthlyAverage)));
+  await expect(page.getByText('BUSIEST MONTH IN THIS PERIOD', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('historical-peak')).toContainText(monthLabel(history.peakMonths[0].month));
+  await expect(page.getByTestId('historical-peak')).toContainText(number.format(history.peakCount));
+  await page.getByLabel('Time period').selectOption('all');
+  await expect(page.getByTestId('peak-month')).toContainText(monthLabel(history.peakMonths[0].month, true));
+  await page.getByRole('button', { name: 'Explore record month' }).click();
+  await expect(page.getByTestId('total-reports')).toHaveText(number.format(history.peakCount));
+  await expect(page).toHaveURL(new RegExp(`from=${history.peakMonths[0].month}&to=${history.peakMonths[0].month}`));
+  const current = snapshot.coverage.to.slice(0, 7);
+  await page.goto(`./?from=${current}&to=${current}`);
+  await expect(page.getByTestId('monthly-average')).toContainText('—');
+  await expect(page.getByText('No complete months in this selection')).toBeVisible();
 });

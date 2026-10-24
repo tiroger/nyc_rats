@@ -1,29 +1,12 @@
 import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
-import { setTimeout as delay } from 'node:timers/promises';
 import { BOROUGHS, SOURCE_IDS, validateSnapshot } from '../src/lib/data.mjs';
+import { query, sourceWhere } from './lib/socrata.mjs';
 
 const output = new URL('../public/data/sightings.json', import.meta.url);
-const filter = "complaint_type='Rodent' AND descriptor='Rat Sighting'";
-
-async function query(id, params, metadata = false) {
-  const url = metadata ? `https://data.cityofnewyork.us/api/views/${id}.json` : `https://data.cityofnewyork.us/resource/${id}.json?${new URLSearchParams(params)}`;
-  for (let attempt = 0; attempt < 4; attempt++) {
-    try {
-      const response = await fetch(url, { headers: process.env.SOCRATA_APP_TOKEN ? { 'X-App-Token': process.env.SOCRATA_APP_TOKEN } : {}, signal: AbortSignal.timeout(180_000) });
-      if (!response.ok) throw new Error(`NYC Open Data returned ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      if (attempt === 3) throw error;
-      console.warn(`Retrying ${id} (${attempt + 1}/3): ${error.message}`);
-      await delay(2000 * 2 ** attempt);
-    }
-  }
-}
 
 async function fetchSource(id) {
   // Fixed source periods prevent overlaps if the City's archive arrangement changes.
-  const period = id === '76ig-c548' ? "created_date >= '2010-01-01T00:00:00' AND created_date < '2020-01-01T00:00:00'" : "created_date >= '2020-01-01T00:00:00'";
-  const where = `${filter} AND ${period}`;
+  const where = sourceWhere(id);
   const [metadata, totals] = await Promise.all([
     query(id, {}, true),
     query(id, { '$select': 'count(*) as reports,min(created_date) as first_report,max(created_date) as last_report', '$where': where }),

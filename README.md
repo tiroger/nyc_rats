@@ -28,6 +28,7 @@ npx playwright install chromium
 npm run test:e2e    # desktop and mobile interactions, recovery, accessibility
 npm run preview    # serve the production build
 npm run data:refresh
+npm run data:audit   # independently verify counts against NYC APIs
 ```
 
 `BASE_PATH` overrides the default `/nyc_rats/` build prefix. Set it to `/` for a root-domain deployment. The optional `SOCRATA_APP_TOKEN` shell environment variable gives data refreshes a dedicated API request pool. No token is required to run the site. `.env.example` documents the setting; the Node script reads the process environment, so export the variable before running it.
@@ -47,7 +48,7 @@ Both are filtered to `complaint_type = 'Rodent' AND descriptor = 'Rat Sighting'`
 
 ZIP boundaries come from the original project's `resources/nyc_zip_bounderies.geojson`. Borough geography was converted from the original project's WGS84 shapefile in `resources/Borough Boundaries/`. These historical boundaries are preserved in `public/geo/`, rather than silently implying current boundaries. D3 rendering normalizes ring winding without mutating the source files.
 
-The current month is partial and clearly marked. Monthly averages include that partial calendar month when it is selected. Future months have no coverage, rather than being presented as zero-report months. The heatmap shows all available years for the selected borough, outlines the selected period, and lets a visitor select an individual month.
+The current month is partial and clearly marked. Monthly averages exclude the latest provisional month and include zero-report complete months. A selection containing only the provisional month has no complete-month average. Peak-month cards follow the selected period and borough; a separate citywide record always uses the full historical series. Tied peak months are identified. Future months have no coverage, rather than being presented as zero-report months. The heatmap shows all available years for the selected borough, outlines the selected period, and lets a visitor select an individual month.
 
 ## GitHub CI/CD
 
@@ -55,14 +56,16 @@ The current month is partial and clearly marked. Monthly averages include that p
 
 - Pushes to `master`: validate, test desktop/mobile/accessibility, build, and deploy.
 - Pull requests targeting `master`: validate, test, and build without deployment.
-- A daily schedule at **10:23 UTC**: fetch current public data, run the checks, preserve the verified snapshot with an unsigned bot commit, and deploy.
+- A daily schedule at **10:23 UTC**: fetch current public data, independently audit it against NYC, run the checks, preserve the verified snapshot with an unsigned bot commit, and deploy.
 - Manual workflow dispatch: deploy, optionally refreshing the data first.
 
 In repository **Settings → Pages → Build and deployment**, the source must be **GitHub Actions**. The `github-pages` environment must allow deployments from `master`. The workflow uses the built `dist/` artifact and the standard GitHub Pages deployment action; no Heroku service or external hosting is needed.
 
 Optional: add a repository Actions secret named `SOCRATA_APP_TOKEN`. It is passed only to the scheduled/manual refresh step, never to the browser build.
 
-The build and browser checks must pass before the scheduled snapshot is committed or a deployment runs. GitHub suppresses follow-on push workflows for commits made with `GITHUB_TOKEN`; the scheduled workflow itself proceeds to deploy the tested artifact. Non-fast-forward snapshot pushes fail safely rather than overwriting another developer's work. Failed refreshes leave the last successful deployment live. Check the Actions tab for failure details and rerun the workflow after resolving them. GitHub may disable scheduled workflows after 60 days without repository activity; successful daily snapshot commits normally keep activity current.
+`npm run data:audit` queries distinct request IDs, monthly/borough counts, and monthly/ZIP counts independently from the pipeline’s three-dimensional aggregates. It reconciles every month and borough and every month and ZIP, including missing geography, so all displayed totals, trends, rankings, and peaks can be checked at their displayed grain. The refresh fails if these independent source checks disagree. Source updates during the audit can cause a safe failure; rerun with a fresh snapshot in that case.
+
+The source audit, build, and browser checks must pass before the scheduled snapshot is committed or a deployment runs. GitHub suppresses follow-on push workflows for commits made with `GITHUB_TOKEN`; the scheduled workflow itself proceeds to deploy the tested artifact. Non-fast-forward snapshot pushes fail safely rather than overwriting another developer's work. Failed refreshes leave the last successful deployment live. Check the Actions tab for failure details and rerun the workflow after resolving them. GitHub may disable scheduled workflows after 60 days without repository activity; successful daily snapshot commits normally keep activity current.
 
 No commit signing, sign-off trailers, or AI attribution trailers are added by this workflow.
 

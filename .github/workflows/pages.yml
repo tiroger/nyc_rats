@@ -40,6 +40,11 @@ jobs:
         env:
           SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
         run: npm run data:refresh
+      - name: Independently audit source totals and rankings
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.refresh_data)
+        env:
+          SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
+        run: npm run data:audit
       - name: Validate data, run unit tests, and build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
