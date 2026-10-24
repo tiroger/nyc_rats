@@ -8,6 +8,10 @@ An independent, interactive atlas of NYC 311 rat-sighting reports. Built with Re
 - Zoomable ZIP map with proportional bubbles, ZIP choropleth, and report details.
 - Monthly trends with keyboard exploration and a data-table alternative.
 - Borough “rat race” and a monthly heatmap spanning 2010 to the latest report.
+- Illustrated rat habitats with source location categories, counts, and percentages.
+- Repeat-burrow exploration: distinct tax lots, repeat-report counts, proportional circles, and a selected lot’s timeline.
+- Independent DOHMH inspection layer, with separate initial/compliance outcomes and recorded actions.
+- Year-by-year hotspot playback and a keyboard-accessible slider, using complete years and a fixed count scale.
 - Monthly CSV downloads, responsive layouts, reduced-motion support, and locally hosted fonts.
 - Freshness labels and an explicit warning when the published snapshot is over three days old.
 
@@ -50,6 +54,27 @@ ZIP boundaries come from the original project's `resources/nyc_zip_bounderies.ge
 
 The current month is partial and clearly marked. Monthly averages exclude the latest provisional month and include zero-report complete months. A selection containing only the provisional month has no complete-month average. Peak-month cards follow the selected period and borough; a separate citywide record always uses the full historical series. Tied peak months are identified. Future months have no coverage, rather than being presented as zero-report months. The heatmap shows all available years for the selected borough, outlines the selected period, and lets a visitor select an individual month.
 
+## Habitat, property, and inspection data
+
+`public/data/details.json` expands the atlas with 2020–present records. These views follow the global dates and borough, clipping to their supported dates. Earlier periods show unavailable coverage rather than zero activity. Inspection availability has its own latest date, since publication can lag behind sightings.
+
+`scripts/refresh-details.mjs` fetches each 311 rat-sighting request once, validates unique request IDs, and reconciles every month/borough/ZIP with the primary snapshot before creating:
+
+- `locations` and `habitatRows`: raw location labels plus `[month, boroughIndex, locationIndex, reports]`.
+- `propertyRows`: `[month, boroughIndex, ZIP, BBL, reports]`. Invalid or missing BBLs use an empty ID, retaining their reports in coverage totals.
+
+Habitat groups are explicit: apartments include 3+ family apartment/mixed-use buildings; smaller homes include 1–2 family dwelling/mixed-use locations; streets include sidewalks and public stairs; vacant properties and sewers have their own groups; other and unknown labels remain visible. Group percentages use all covered reports, not only known categories.
+
+A BBL identifies a tax lot, which can contain several buildings. Distinct lots are counted once across the selected period. Repeat lots have at least two reports in that period. For map placement, each lot is assigned to its most frequently reported valid ZIP (ties break by ZIP); the circles count distinct lots, not reports. These measures do not estimate rat populations or confirm persistent infestations. Property-ID coverage and excluded report counts are shown explicitly.
+
+The [DOHMH Rodent Inspection source](https://data.cityofnewyork.us/d/p937-wjvj) supplies independent initial, compliance, treatment, stoppage, and cleanup records. `inspections.rows` stores `[month, boroughIndex, ZIP, typeIndex, resultIndex, count]`, with dictionaries in `types` and `results`. Its identity definition removes duplicates on case, inspection timestamp, type, BBL, result, borough, and ZIP. Rows without a case ID are retained individually. Raw, deduplicated, and missing-case-ID totals remain in the snapshot. Distinct records are not necessarily distinct physical visits or distinct properties.
+
+Rat-positive results include both “Failed for Rat Activity” and “Failed for Rat Activity and Other Reason.” Initial and compliance results have separate denominators; unclassified outcomes are shown and excluded from the classified-result rate. Treatments and cleanups are displayed separately, without implying a complaint-to-treatment conversion funnel. Proactive inspections and targeted follow-ups mean inspection positivity is not a representative prevalence estimate for all NYC properties.
+
+`baseGeneratedAt` binds the expanded snapshot to its exact sightings snapshot. Data validation rejects mismatched generations, omitted counts, and inconsistent monthly/geographic totals. `scripts/audit-details.mjs` independently verifies habitats, property totals, and inspection records against NYC APIs, with explicit pagination for property lists. The daily workflow commits and deploys both snapshots together only after all checks pass. An additional-data loading failure leaves the main sightings atlas usable and provides a retry control.
+
+Hotspot playback covers complete calendar years from 2010 through the year before the latest reported year. Bubble and choropleth scales use one annual ZIP maximum across the series for the selected borough. This shows changing report patterns, not tracked rat migration. Reduced-motion preferences disable autoplay while preserving manual year selection. Shared URLs retain dates, borough, map layer, inspection stage, selected insight tab, and fixed-scale year frames.
+
 ## GitHub CI/CD
 
 `.github/workflows/pages.yml` runs on:
@@ -75,6 +100,7 @@ The source audit, build, and browser checks must pass before the scheduled snaps
 - `scripts/`: data refresh and validation.
 - `tests/`: data/geography checks and Playwright browser/accessibility tests.
 - `public/`: only the assets and snapshots needed by the deployed app.
+- `src/lib/details.mjs`: habitat grouping, distinct-lot counting, inspection classification, and expanded-snapshot validation.
 - `legacy/`: the original HTML page and research README, preserved as source history.
 
 The original notebooks, CSVs, Tableau workbook, and figures remain in the repository for research reference. They are not part of the deployed frontend and are not used as the refresh pipeline. Restaurant and weather analyses are historical research, not current dashboard layers.
