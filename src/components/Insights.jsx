@@ -430,25 +430,27 @@ export function InspectionPanel({ details, summary, kind, setKind, onMap }) {
         </div>
       </div>
       <div className="inspection-results">
-        {Object.entries(labels).map(([key, label]) => (
-          <div className="inspection-result" key={key}>
-            <div>
-              <span>
-                <i style={{ background: colors[key] }} />
-                {label}
+        {Object.entries(labels)
+          .filter(([key]) => key !== "unknown" || summary.outcomes.unknown > 0)
+          .map(([key, label]) => (
+            <div className="inspection-result" key={key}>
+              <div>
+                <span>
+                  <i style={{ background: colors[key] }} />
+                  {label}
+                </span>
+                <b className="mono">{number.format(summary.outcomes[key])}</b>
+              </div>
+              <span className="habitat-track">
+                <span
+                  style={{
+                    width: `${summary.total ? (summary.outcomes[key] / summary.total) * 100 : 0}%`,
+                    background: colors[key],
+                  }}
+                />
               </span>
-              <b className="mono">{number.format(summary.outcomes[key])}</b>
             </div>
-            <span className="habitat-track">
-              <span
-                style={{
-                  width: `${summary.total ? (summary.outcomes[key] / summary.total) * 100 : 0}%`,
-                  background: colors[key],
-                }}
-              />
-            </span>
-          </div>
-        ))}
+          ))}
       </div>
       <div className="inspection-actions">
         <span className="eyebrow">
