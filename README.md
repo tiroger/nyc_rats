@@ -5,6 +5,8 @@ An independent, interactive atlas of NYC 311 rat-sighting reports. Built with Re
 ## Explore
 
 - Linked borough and period filters, with shareable URLs.
+- The default is the latest 12 calendar months, including the provisional latest month; the monthly average excludes that month. The map displays its own date window and mapped/unmatched counts. Resident-report map counts and headline figures use the same dates and borough.
+- Shared links preserve exact selected months and the preset label. Older date-only links recognize matching presets. If a later snapshot moves a relative preset beyond the saved dates, that link keeps its original dates and correctly becomes a custom period.
 - Zoomable ZIP map with proportional bubbles, ZIP choropleth, and report details.
 - Monthly trends with keyboard exploration and a data-table alternative.
 - Borough “rat race” and a monthly heatmap spanning 2010 to the latest report.

@@ -23,6 +23,7 @@ import {
   monthLabel,
   number,
   periodMetrics,
+  presetForRange,
   presetRange,
   summarize,
   validateSnapshot,
@@ -35,6 +36,11 @@ const dateLabel = (value) =>
     year: "numeric",
     timeZone: "UTC",
   });
+
+const rangeLabel = ([start, end]) =>
+  start === end
+    ? monthLabel(start, true)
+    : `${monthLabel(start, true)} — ${monthLabel(end, true)}`;
 
 export default function App() {
   const { motion } = useCityPlay();
@@ -85,8 +91,13 @@ export default function App() {
           from >= data.coverage.from.slice(0, 7) &&
           to <= data.coverage.to.slice(0, 7)
         ) {
-          setCustomRange([from, to]);
-          setPreset("custom");
+          const restored = presetForRange(
+            [from, to],
+            data.coverage,
+            search.get("period"),
+          );
+          setCustomRange(restored === "custom" ? [from, to] : null);
+          setPreset(restored);
           const frame = Number(search.get("frame"));
           if (
             from === `${frame}-01` &&
@@ -155,8 +166,8 @@ export default function App() {
   const showFrame = useCallback((year) => {
     setAnimationYear(year);
     setMapLayer("reports");
-    setPreset("custom");
-    setCustomRange([`${year}-01`, `${year}-12`]);
+    setPreset(String(year));
+    setCustomRange(null);
   }, []);
   const choosePeriod = (months) => {
     setAnimationYear(null);
@@ -206,6 +217,7 @@ export default function App() {
     const url = new URL(window.location.href);
     url.searchParams.set("from", start);
     url.searchParams.set("to", end);
+    url.searchParams.set("period", preset);
     if (borough === "All NYC") url.searchParams.delete("borough");
     else url.searchParams.set("borough", borough);
     if (mapLayer === "reports") url.searchParams.delete("layer");
@@ -219,7 +231,16 @@ export default function App() {
     window.history.replaceState(null, "", url);
     setSelectedZip(null);
     setCopied(false);
-  }, [data, start, end, borough, mapLayer, inspectionKind, animationYear]);
+  }, [
+    data,
+    start,
+    end,
+    preset,
+    borough,
+    mapLayer,
+    inspectionKind,
+    animationYear,
+  ]);
 
   function download() {
     const csv = `Month,Borough,Reported sightings\n${summary.months.map((r) => `${r.month},${borough},${r.count}`).join("\n")}\n`;
@@ -276,10 +297,7 @@ export default function App() {
   const historicalPeak = historicalMetrics.peakMonths[0];
   const stale = Date.now() - Date.parse(data.generatedAt) > 3 * 86400_000;
   const partial = end === data.coverage.to.slice(0, 7);
-  const periodText =
-    start === end
-      ? monthLabel(start, true)
-      : `${monthLabel(start, true)} — ${monthLabel(end, true)}`;
+  const periodText = rangeLabel(range);
   const mapSummary =
     mapLayer === "properties"
       ? burrows?.map
@@ -292,16 +310,14 @@ export default function App() {
       : mapLayer === "inspections"
         ? "rat-positive inspection records"
         : "reports";
-  const mapRange =
-    details && mapLayer !== "reports"
-      ? detailRange(
-          mapLayer === "inspections"
-            ? details.inspections.coverage
-            : details.coverage,
-          start,
-          end,
-        )
-      : [start, end];
+  const mapCoverage =
+    mapLayer === "reports"
+      ? data.coverage
+      : mapLayer === "inspections"
+        ? details?.inspections.coverage
+        : details?.coverage;
+  const mapRange = mapCoverage ? detailRange(mapCoverage, start, end) : null;
+  const mapPartial = mapRange?.[1] === mapCoverage?.to.slice(0, 7);
   const mapEmpty =
     mapLayer !== "reports" && !details
       ? detailResource.error
@@ -621,10 +637,26 @@ export default function App() {
                   : mapLayer === "properties"
                     ? "Distinct reported tax lots, each assigned once to its most-reported ZIP. Detail coverage begins in 2020."
                     : `${inspectionKind} inspection records with active rat signs. Independent DOHMH findings; not a count of resident reports.`}
-                {mapLayer !== "reports" &&
-                  mapRange &&
-                  ` Available selection: ${monthLabel(mapRange[0], true)} — ${monthLabel(mapRange[1], true)}.`}
               </p>
+              <div className="map-period mono" data-testid="map-period">
+                <span>
+                  {borough.toUpperCase()} /{" "}
+                  {mapRange
+                    ? rangeLabel(mapRange).toUpperCase()
+                    : "NO AVAILABLE COVERAGE"}
+                </span>
+                <span>
+                  {!mapCoverage
+                    ? detailResource.loading
+                      ? "Loading layer coverage…"
+                      : "Layer data unavailable"
+                    : !mapRange
+                      ? "Selected dates fall outside this layer’s coverage"
+                      : mapPartial
+                        ? `Latest available month is partial · through ${dateLabel(mapCoverage.to)}`
+                        : "Complete calendar months"}
+                </span>
+              </div>
               <AtlasMap
                 geography={resource.geography}
                 summary={mapSummary || { total: 0, zips: [] }}

@@ -126,6 +126,10 @@ export default function AtlasMap({
         </div>
         <span className="mono map-hint">Drag to explore · select a ZIP</span>
       </div>
+      <p className="map-counts mono" data-testid="map-counts">
+        {number.format(mappedCount)} {unit} mapped ·{" "}
+        {number.format(summary.total - mappedCount)} without a matching ZIP
+      </p>
       <div className="map-canvas">
         <svg
           ref={svgRef}

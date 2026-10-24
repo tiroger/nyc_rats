@@ -9,6 +9,7 @@ import {
   monthSequence,
   periodMetrics,
   presetRange,
+  presetForRange,
   summarize,
   validateSnapshot,
   forD3,
@@ -189,6 +190,34 @@ test("month arithmetic handles year boundaries and leap years without local time
   assert.deepEqual(presetRange("12m", coverage), ["2025-11", "2026-10"]);
   assert.deepEqual(presetRange("2026", coverage), ["2026-01", "2026-10"]);
   assert.deepEqual(presetRange("2019", coverage), ["2019-01", "2019-12"]);
+});
+
+test("shared-link periods restore named presets and distinguish overlapping choices", () => {
+  const coverage = { from: "2010-01-01", to: "2026-10-23" };
+  for (const preset of ["12m", "ytd", "all", "2019", "2026"]) {
+    assert.equal(
+      presetForRange(presetRange(preset, coverage), coverage, preset),
+      preset,
+    );
+  }
+  assert.equal(presetForRange(["2025-11", "2026-10"], coverage), "12m");
+  assert.equal(presetForRange(["2026-01", "2026-10"], coverage), "ytd");
+  assert.equal(presetForRange(["2019-01", "2019-12"], coverage), "2019");
+  assert.equal(presetForRange(["2010-01", "2026-10"], coverage), "all");
+  assert.equal(presetForRange(["2026-03", "2026-05"], coverage), "custom");
+  assert.equal(
+    presetForRange(["2025-11", "2026-10"], coverage, "custom"),
+    "custom",
+  );
+});
+
+test("saved dates remain fixed when a new snapshot moves a relative preset window", () => {
+  const coverage = { from: "2010-01-01", to: "2026-11-12" };
+  assert.equal(
+    presetForRange(["2025-11", "2026-10"], coverage, "12m"),
+    "custom",
+  );
+  assert.deepEqual(presetRange("12m", coverage), ["2025-12", "2026-11"]);
 });
 
 test("snapshot validation rejects duplicate groups, invalid counts and unreconciled sources", () => {

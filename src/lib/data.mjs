@@ -53,6 +53,29 @@ export function presetRange(preset, coverage) {
   return [monthOffset(end, -11), end];
 }
 
+// Shared-link dates stay authoritative; the preset preserves their label.
+// Recognize older links without an explicit period parameter, too.
+export function presetForRange([start, end], coverage, preferred) {
+  const firstYear = Number(coverage.from.slice(0, 4));
+  const lastYear = Number(coverage.to.slice(0, 4));
+  const presets = [
+    "12m",
+    "ytd",
+    "all",
+    ...Array.from({ length: lastYear - firstYear + 1 }, (_, i) =>
+      String(lastYear - i),
+    ),
+  ];
+  const matches = (preset) => {
+    const range = presetRange(preset, coverage);
+    return range[0] === start && range[1] === end;
+  };
+  if (preferred === "custom") return "custom";
+  if (presets.includes(preferred))
+    return matches(preferred) ? preferred : "custom";
+  return presets.find(matches) || "custom";
+}
+
 export function summarize(data, start, end, borough = "All NYC") {
   const months = monthSequence(start, end).map((month) => ({
     month,

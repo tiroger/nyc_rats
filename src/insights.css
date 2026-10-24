@@ -28,6 +28,46 @@
   color: #58664d;
   line-height: 1.8;
 }
+.map-period {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px 18px;
+  flex-wrap: wrap;
+  margin: 0 24px 15px;
+  padding: 12px 0;
+  border-block: 1px solid var(--line);
+  font-size: 8px;
+  line-height: 1.8;
+}
+.map-counts {
+  margin: 0;
+  padding: 0 24px 15px;
+  color: #58664d;
+  font-size: 8px;
+  line-height: 1.8;
+}
+.year-preview {
+  display: block;
+  font-size: 8px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .map-period {
+    margin-inline: 15px;
+  }
+  .map-counts {
+    padding-inline: 15px;
+  }
+}
+@media (max-width: 640px) {
+  .map-period {
+    margin-inline: 18px;
+  }
+  .map-counts {
+    padding-inline: 18px;
+  }
+}
 .download-note {
   font-size: 9px !important;
   color: #58664d;

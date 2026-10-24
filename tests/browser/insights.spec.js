@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile } from "node:fs/promises";
-import { presetRange, number } from "../../src/lib/data.mjs";
+import { presetRange, number, monthLabel } from "../../src/lib/data.mjs";
 import {
   summarizeBurrows,
   summarizeInspections,
@@ -43,6 +43,7 @@ test("habitat categories and repeat-property metrics follow the selected dates a
     number.format(summarizeBurrows(details, start, end).propertyCount),
   );
   await page.getByLabel("Map layer").selectOption("properties");
+  await expect(page.getByTestId("map-period")).toContainText("ALL NYC /");
   await expect(page.locator(".map-source-note")).toContainText(
     "each assigned once",
   );
@@ -121,6 +122,20 @@ test("inspection stages use separate denominators and findings can be shown on t
   await expect(
     page.getByRole("tab", { name: "Inspection findings" }),
   ).toHaveAttribute("aria-selected", "true");
+  await page.getByLabel("Time period").selectOption("all");
+  const coverage = details.inspections.coverage;
+  await expect(page.getByTestId("map-period")).toContainText(
+    `ALL NYC / ${monthLabel(coverage.from.slice(0, 7), true).toUpperCase()} — ${monthLabel(coverage.to.slice(0, 7), true).toUpperCase()}`,
+  );
+  await expect(page.getByTestId("map-period")).toContainText(
+    new Date(`${coverage.to}T12:00:00Z`).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    }),
+  );
+  await expect(page.locator(".selection-caption")).toContainText("JAN 2010");
 });
 
 test("unsupported historical dates show missing coverage and additional-data failures preserve the atlas", async ({
@@ -130,6 +145,10 @@ test("unsupported historical dates show missing coverage and additional-data fai
   await expect(
     page.getByRole("heading", { name: "This view begins in 2020." }),
   ).toBeVisible();
+  await page.getByLabel("Map layer").selectOption("properties");
+  await expect(page.getByTestId("map-period")).toContainText(
+    "NO AVAILABLE COVERAGE",
+  );
   await page
     .getByRole("button", { name: "Explore available detail dates" })
     .click();
@@ -159,6 +178,11 @@ test("hotspot playback uses complete years, supports scrubbing, and respects red
     page.getByRole("button", { name: "Pause hotspot animation" }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".map-legend")).toContainText("fixed year scale");
+  await expect(
+    page.getByTestId("map-period").locator("span").first(),
+  ).toHaveText(
+    await page.locator(".selection-caption > span").first().innerText(),
+  );
   await page.getByRole("button", { name: "Pause hotspot animation" }).click();
   const slider = page.getByRole("slider", {
     name: "Hotspot year",
@@ -178,6 +202,7 @@ test("hotspot playback uses complete years, supports scrubbing, and respects red
   await expect(page.locator(".player-title")).toContainText(
     "2023 / resident reports",
   );
+  await expect(page.getByLabel("Time period")).toHaveValue("2023");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(
     page.getByRole("button", { name: "Play hotspot animation" }),

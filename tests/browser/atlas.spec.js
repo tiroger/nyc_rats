@@ -15,6 +15,21 @@ const snapshot = JSON.parse(
     "utf8",
   ),
 );
+const geography = JSON.parse(
+  await readFile(
+    new URL("../../public/geo/zip-codes.geojson", import.meta.url),
+    "utf8",
+  ),
+);
+const knownZips = new Set(
+  geography.features
+    .filter(
+      (f) =>
+        Number.isFinite(Number(f.properties.longitude)) &&
+        Number.isFinite(Number(f.properties.latitude)),
+    )
+    .map((f) => f.properties.postalCode),
+);
 
 test("atlas loads without runtime errors, filters reports, and survives a shared-link reload", async ({
   page,
@@ -41,6 +56,7 @@ test("atlas loads without runtime errors, filters reports, and survives a shared
   const expected = await total.innerText();
   await page.reload();
   await expect(total).toHaveText(expected);
+  await expect(page.getByLabel("Time period")).toHaveValue("2019");
   await expect(
     page
       .getByRole("group", { name: "Filter by borough" })
@@ -52,6 +68,91 @@ test("atlas loads without runtime errors, filters reports, and survives a shared
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+});
+
+test("the default period survives reload and old date links recover their preset labels", async ({
+  page,
+}) => {
+  const period = page.getByLabel("Time period");
+  const [from, to] = presetRange("12m", snapshot.coverage);
+  await page.goto("./");
+  await expect(period).toHaveValue("12m");
+  await expect(page).toHaveURL(/period=12m/);
+  await page.reload();
+  await expect(period).toHaveValue("12m");
+  for (const preset of ["ytd", "all"]) {
+    await period.selectOption(preset);
+    await page.reload();
+    await expect(period).toHaveValue(preset);
+  }
+  await page.goto(`./?from=${from}&to=${to}`);
+  await expect(period).toHaveValue("12m");
+  await page.goto("./?from=2020-03&to=2020-05");
+  await expect(period).toHaveValue("custom");
+  await page.reload();
+  await expect(period).toHaveValue("custom");
+});
+
+test("strip totals, map dates, ZIP counts, and unmatched counts reconcile across periods and boroughs", async ({
+  page,
+}) => {
+  await page.goto("./");
+  for (const [preset, borough, b] of [
+    ["12m", "All NYC", null],
+    ["2019", "Brooklyn", 1],
+    ["all", "All NYC", null],
+  ]) {
+    await page.getByLabel("Time period").selectOption(preset);
+    await page
+      .getByRole("group", { name: "Filter by borough" })
+      .getByRole("button", { name: borough, exact: true })
+      .click();
+    const [from, to] = presetRange(preset, snapshot.coverage);
+    // Sum raw snapshot rows independently of the UI aggregation helper.
+    const rows = snapshot.rows.filter(
+      (row) => row[0] >= from && row[0] <= to && (b === null || row[1] === b),
+    );
+    const total = rows.reduce((n, row) => n + row[3], 0);
+    const zips = new Map();
+    for (const [, , zip, count] of rows)
+      if (knownZips.has(zip)) zips.set(zip, (zips.get(zip) || 0) + count);
+    const mapped = [...zips.values()].reduce((a, b) => a + b, 0);
+    await expect(page.getByTestId("total-reports")).toHaveText(
+      number.format(total),
+    );
+    await expect(
+      page.getByTestId("map-period").locator("span").first(),
+    ).toHaveText(
+      await page.locator(".selection-caption > span").first().innerText(),
+    );
+    await expect(page.getByTestId("map-counts")).toHaveText(
+      `${number.format(mapped)} reports mapped · ${number.format(total - mapped)} without a matching ZIP`,
+    );
+    const bubbles = await page.locator(".report-bubble").evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const [, zip, count] = node
+          .getAttribute("aria-label")
+          .match(/^ZIP (\d{5}), ([\d,]+) reports$/);
+        return [zip, Number(count.replaceAll(",", ""))];
+      }),
+    );
+    expect(Object.fromEntries(bubbles)).toEqual(Object.fromEntries(zips));
+  }
+  await page.getByRole("button", { name: "Next hotspot year" }).click();
+  const year = Number(
+    await page.getByRole("slider", { name: "Hotspot year" }).inputValue(),
+  );
+  await expect(page.getByLabel("Time period")).toHaveValue(String(year));
+  await expect(page.getByTestId("map-period")).toContainText(
+    `JAN ${year} — DEC ${year}`,
+  );
+  await expect(page.getByTestId("total-reports")).toHaveText(
+    number.format(
+      snapshot.rows
+        .filter((row) => row[0].startsWith(String(year)))
+        .reduce((n, row) => n + row[3], 0),
+    ),
+  );
 });
 
 test("map controls, ZIP selection, seasonality, and CSV export work together", async ({

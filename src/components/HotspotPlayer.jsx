@@ -76,7 +76,12 @@ export default function HotspotPlayer({
             }}
           />
         </label>
-        <output className="mono">{year}</output>
+        <output className="mono">
+          {activeYear === null && (
+            <span className="year-preview">Year preview </span>
+          )}
+          {year}
+        </output>
         <button
           aria-label="Next hotspot year"
           onClick={() => {
