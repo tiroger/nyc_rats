@@ -74,6 +74,10 @@ test("NYC secrets work with the keyboard, persist, and remain accessible", async
     })),
   ).toEqual([]);
   await page.getByRole("button", { name: "Dismiss discovery" }).click();
+  const skip = page.getByRole("link", { name: "Skip to the atlas" });
+  await skip.focus();
+  await skip.click();
+  await expect(page).toHaveURL(/#explore$/);
   await page.reload();
   await expect(
     page.getByRole("heading", { name: "Honorary Rat Local rider." }),

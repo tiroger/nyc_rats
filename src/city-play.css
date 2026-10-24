@@ -1,6 +1,9 @@
 html {
   scroll-padding-top: 115px;
 }
+.skip-link {
+  z-index: 70;
+}
 /* The route belongs to this atlas, with a little affection for its home city. */
 .rat-local {
   position: sticky;
