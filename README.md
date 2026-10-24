@@ -14,6 +14,8 @@ An independent, interactive atlas of NYC 311 rat-sighting reports. Built with Re
 - Year-by-year hotspot playback and a keyboard-accessible slider, using complete years and a fixed count scale.
 - Monthly CSV downloads, responsive layouts, reduced-motion support, and locally hosted fonts.
 - Freshness labels and an explicit warning when the published snapshot is over three days old.
+- A subway-inspired Rat Local route, an interactive pizza rat, a hidden sewer club, and three collectible souvenir stamps saved on your device. Open “Need a clue?” at the Local stop for hints.
+- Citywide fact tickets drawn from the verified snapshots, with explicit coverage dates, plus a persistent motion toggle that also pauses hotspot playback. System reduced-motion settings are always respected.
 
 ## Run locally
 

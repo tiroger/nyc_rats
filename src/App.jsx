@@ -4,6 +4,12 @@ import AtlasMap from "./components/AtlasMap.jsx";
 import Insights from "./components/Insights.jsx";
 import HotspotPlayer from "./components/HotspotPlayer.jsx";
 import {
+  CityCorner,
+  HeroRat,
+  SubwayNav,
+  useCityPlay,
+} from "./components/CityPlay.jsx";
+import {
   detailRange,
   hotspotScale,
   summarizeBurrows,
@@ -31,6 +37,7 @@ const dateLabel = (value) =>
   });
 
 export default function App() {
+  const { motion } = useCityPlay();
   const [resource, setResource] = useState({ loading: true });
   const [borough, setBorough] = useState("All NYC");
   const [preset, setPreset] = useState("12m");
@@ -163,13 +170,9 @@ export default function App() {
   };
   const showInspections = () => {
     chooseLayer("inspections");
-    document
-      .getElementById("rat-map")
-      .scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "instant"
-          : "smooth",
-      });
+    document.getElementById("rat-map").scrollIntoView({
+      behavior: motion ? "smooth" : "instant",
+    });
   };
   const summary = useMemo(
     () => (data ? summarize(data, start, end, borough) : null),
@@ -343,7 +346,11 @@ export default function App() {
         </nav>
       </header>
       <main>
-        <section className="hero shell" aria-labelledby="hero-title">
+        <section
+          className="hero shell"
+          id="street-level"
+          aria-labelledby="hero-title"
+        >
           <div className="hero-copy">
             <div className="eyebrow">
               <span className="live-dot" /> FIVE BOROUGHS. ONE VERY PERSISTENT
@@ -366,7 +373,7 @@ export default function App() {
               PUBLIC DATA. CURIOUS HUMANS. ABSOLUTELY NO TABLEAU.
             </div>
           </div>
-          <div className="hero-art" aria-hidden="true">
+          <div className="hero-art">
             <div className="orbit orbit-one" />
             <div className="orbit orbit-two" />
             <span className="art-coordinate mono">
@@ -374,11 +381,11 @@ export default function App() {
               74.0060° W
             </span>
             <div className="art-sun" />
-            <svg viewBox="0 0 440 220" className="skyline">
+            <svg viewBox="0 0 440 220" className="skyline" aria-hidden="true">
               <path d="M5 200V150H35V105H51V68H65V105H81V200H95V134H123V161H142V115H159V76H174V115H190V200H201V99H223V47H230V12H234V47H243V99H264V200H280V155H304V125H330V178H347V103H368V145H388V130H415V200" />
               <path d="M5 200H430" />
             </svg>
-            <Rat className="hero-rat" />
+            <HeroRat />
             <span className="rat-stamp mono">
               EST. 2010
               <br />
@@ -400,6 +407,7 @@ export default function App() {
             <a href="#methodology">Know what you’re counting ↗</a>
           </div>
         </div>
+        <SubwayNav />
         {stale && (
           <div className="stale-notice shell" role="status">
             This snapshot was last refreshed{" "}
@@ -781,15 +789,9 @@ export default function App() {
                 end={end}
                 onSelect={(month) => {
                   choosePeriod([month, month]);
-                  document
-                    .getElementById("explore")
-                    .scrollIntoView({
-                      behavior: window.matchMedia(
-                        "(prefers-reduced-motion: reduce)",
-                      ).matches
-                        ? "instant"
-                        : "smooth",
-                    });
+                  document.getElementById("explore").scrollIntoView({
+                    behavior: motion ? "smooth" : "instant",
+                  });
                 }}
               />
             </article>
@@ -819,6 +821,7 @@ export default function App() {
             </aside>
           </div>
         </section>
+        <CityCorner data={data} details={details} />
         <section
           className="methodology shell"
           id="methodology"

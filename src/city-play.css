@@ -1,0 +1,743 @@
+html {
+  scroll-padding-top: 115px;
+}
+/* The route belongs to this atlas, with a little affection for its home city. */
+.rat-local {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: #f5f3e9f5;
+  border-bottom: 1px solid var(--ink);
+  backdrop-filter: blur(12px);
+}
+.local-inner {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  min-height: 88px;
+}
+.local-brand {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.route-bullet {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lime);
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.local-brand > span:last-child {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.local-brand small {
+  display: block;
+  font-size: 7px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  margin-top: 5px;
+}
+.local-stops {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  min-width: 0;
+}
+.local-stops::before {
+  content: "";
+  position: absolute;
+  height: 3px;
+  background: var(--ink);
+  left: 8.33%;
+  right: 8.33%;
+  top: 31px;
+}
+.local-stops a {
+  text-align: center;
+  font-size: 10px;
+  text-decoration: none;
+  padding: 25px 2px 12px;
+  position: relative;
+}
+.station-dot {
+  display: block;
+  margin: 0 auto 9px;
+  width: 14px;
+  height: 14px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+.local-stops a[aria-current] {
+  font-weight: 700;
+}
+.local-stops a[aria-current] .station-dot {
+  background: var(--lime);
+  box-shadow: 0 0 0 3px var(--paper);
+}
+.local-stops a:hover .station-dot {
+  background: var(--ink);
+}
+.local-train {
+  position: absolute;
+  width: 29px;
+  height: 13px;
+  top: 6px;
+  transform: translateX(-50%);
+  background: var(--ink);
+  border-radius: 4px 5px 2px 2px;
+  display: flex;
+  gap: 3px;
+  padding: 3px 4px;
+  transition: left 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+.local-train::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 2px;
+  background: var(--ink);
+  bottom: -3px;
+  left: 5px;
+}
+.local-train i {
+  background: var(--lime);
+  width: 5px;
+  height: 5px;
+}
+.express-run {
+  animation: express-trip 2.4s ease-in-out;
+}
+@keyframes express-trip {
+  0%,
+  100% {
+    transform: translateX(-50%);
+  }
+  25% {
+    left: 8.33%;
+  }
+  70% {
+    left: 91.66%;
+  }
+}
+.motion-switch {
+  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 30px;
+  padding: 8px 10px;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.motion-switch:hover:not(:disabled) {
+  background: var(--lime);
+  border-color: var(--ink);
+}
+.motion-switch span:first-child {
+  padding-right: 4px;
+}
+.motion-switch:disabled {
+  opacity: 0.8;
+}
+.hero-rat-button {
+  position: absolute;
+  z-index: 1;
+  left: 13%;
+  top: 88px;
+  width: 80%;
+  height: 210px;
+  background: none;
+  padding: 0;
+  border-radius: 50%;
+}
+.hero-rat-scene {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.hero-rat-button .hero-rat {
+  position: static;
+  width: 100%;
+  height: 100%;
+}
+.pizza-slice {
+  position: absolute;
+  right: 10%;
+  bottom: 3%;
+  width: 48px;
+  height: 54px;
+  transform: rotate(25deg);
+  transition: transform 0.25s;
+}
+.pizza-hint {
+  position: absolute;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  left: 8%;
+  bottom: 5px;
+  padding: 5px 8px;
+  background: var(--paper);
+  border: 1px dashed #7b8a65;
+  transform: rotate(-5deg);
+  transition: transform 0.2s;
+}
+.hero-rat-button:hover .pizza-hint,
+.hero-rat-button:focus-visible .pizza-hint {
+  transform: rotate(0);
+  background: var(--lime);
+}
+.hero-rat-button:hover .pizza-slice {
+  transform: rotate(10deg) translate(-5px, -6px);
+}
+.rat-tail {
+  transform-origin: 49px 98px;
+}
+.hero-rat-button:hover .rat-tail,
+.hero-rat-button:focus-visible .rat-tail {
+  animation: tail-twitch 0.65s ease-in-out 3;
+}
+.rat-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.hero-rat-button:hover .rat-eye {
+  animation: rat-blink 2s 1;
+}
+.has-pizza .hero-rat {
+  animation: happy-rat 0.5s ease-in-out 4;
+}
+.has-pizza .pizza-slice {
+  animation: pizza-nibble 1.8s ease-in-out;
+}
+.skyline path {
+  stroke-dasharray: 1800;
+  stroke-dashoffset: 0;
+  animation: skyline-arrival 2s ease-out 1;
+}
+@keyframes skyline-arrival {
+  from {
+    stroke-dashoffset: 1800;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes tail-twitch {
+  50% {
+    transform: rotate(9deg);
+  }
+}
+@keyframes rat-blink {
+  45%,
+  55% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes happy-rat {
+  50% {
+    transform: rotate(-10deg) translateY(-5px);
+  }
+}
+@keyframes pizza-nibble {
+  30%,
+  65% {
+    transform: rotate(10deg) translate(-12px, -15px) scale(0.85);
+  }
+}
+.city-corner {
+  padding-block: 64px 70px;
+  border-top: 1px solid var(--ink);
+}
+.local-sign {
+  font-size: 9px;
+  line-height: 1.9;
+  text-align: right;
+  letter-spacing: 0.6px;
+}
+.city-play-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 40px;
+  margin-top: 30px;
+  align-items: stretch;
+}
+.fact-ticket {
+  position: relative;
+  background: var(--lime);
+  border: 1px solid var(--ink);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ticket-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 25px;
+  border-bottom: 1px dashed #65743f;
+  font-size: 9px;
+  letter-spacing: 0.7px;
+}
+.ticket-fact {
+  padding: 24px 28px 22px;
+  min-height: 255px;
+  animation: ticket-arrival 0.35s ease-out;
+}
+.ticket-fact h3 {
+  font-weight: 500;
+  margin: 0 0 7px;
+  font-size: 22px;
+  letter-spacing: -0.6px;
+}
+.ticket-fact > strong {
+  font-size: clamp(42px, 5vw, 65px);
+  letter-spacing: -3px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.ticket-fact p {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 10px 0 18px;
+  max-width: 46ch;
+}
+.ticket-dates {
+  display: block;
+  font-size: 9px;
+  line-height: 1.9;
+}
+.ticket-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 17px 25px;
+  border-top: 1px dashed #65743f;
+}
+.ticket-bottom a {
+  font-size: 11px;
+}
+.ticket-bottom button {
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11px;
+  padding: 12px 15px;
+  border-radius: 4px;
+}
+.ticket-bottom button:hover {
+  background: #426046;
+}
+@keyframes ticket-arrival {
+  from {
+    transform: translateY(5px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.sewer-club {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 29px,
+    #d7dacd65 29px,
+    #d7dacd65 30px
+  );
+  padding: 25px 15px;
+  overflow: hidden;
+}
+.sewer-club > .eyebrow {
+  font-size: 8px;
+  text-align: center;
+}
+.manhole-scene {
+  position: relative;
+  width: 235px;
+  height: 235px;
+  margin-block: 22px;
+}
+.manhole-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: none;
+  border-radius: 50%;
+  transform-origin: 87% 75%;
+  transition: transform 0.65s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.manhole-button svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(2px 4px 0 #263c2e25);
+}
+.manhole-button text {
+  font-family: var(--mono);
+  fill: var(--ink);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 3px;
+}
+.manhole-button .cover-small {
+  font-size: 7px;
+  letter-spacing: 0.5px;
+}
+.manhole-button:hover {
+  transform: rotate(-8deg);
+}
+.is-open .manhole-button {
+  transform: translate(37%, 27%) rotate(48deg) scale(0.65);
+}
+.sewer-residents {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--lime);
+  padding: 28px 22px;
+  box-shadow: inset 0 0 0 8px #497564;
+}
+.sewer-residents[hidden] {
+  display: none;
+}
+.sewer-residents > svg {
+  width: 105px;
+  height: 62px;
+  transform: rotate(-9deg);
+  --rat-detail: var(--ink);
+}
+.sewer-residents > svg:nth-child(2) {
+  position: absolute;
+  width: 75px;
+  top: 64px;
+  right: 17px;
+  transform: scaleX(-1) rotate(10deg);
+}
+.sewer-residents > span {
+  position: absolute;
+  bottom: 41px;
+  left: 28px;
+  font-size: 9px;
+  line-height: 1.8;
+}
+.manhole-caption {
+  font-size: 8px;
+  letter-spacing: 0.8px;
+  text-align: center;
+}
+.souvenir-ticket {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 35px;
+  border-block: 1px solid var(--line);
+  padding: 26px 0;
+  margin-top: 30px;
+}
+.souvenir-ticket h3 {
+  font-size: 20px;
+  margin: 9px 0 7px;
+  font-weight: 500;
+}
+.souvenir-ticket p {
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 0;
+}
+.souvenir-ticket ul {
+  display: flex;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  align-items: center;
+}
+.souvenir-ticket li {
+  flex: 1;
+  border: 1px dashed #7b8a65;
+  border-radius: 6px;
+  padding: 10px 6px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 8px;
+}
+.souvenir-ticket li > span:first-child {
+  display: block;
+  font-size: 19px;
+  margin-bottom: 5px;
+}
+.souvenir-ticket li.collected {
+  background: var(--lime);
+  border-style: solid;
+  transform: rotate(-2deg);
+}
+.souvenir-ticket li.collected:nth-child(2) {
+  transform: rotate(2deg);
+}
+.souvenir-ticket details {
+  grid-column: 1 / -1;
+}
+.souvenir-ticket summary {
+  cursor: pointer;
+  font-size: 11px;
+  width: fit-content;
+}
+.souvenir-ticket details p {
+  margin-top: 12px;
+}
+.express-button {
+  margin-top: 12px;
+  font-size: 11px;
+}
+kbd {
+  font-family: var(--mono);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.city-toast {
+  position: fixed;
+  z-index: 60;
+  right: 24px;
+  bottom: 24px;
+  width: min(390px, calc(100% - 36px));
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 8px 25px #263c2e35;
+  display: flex;
+  gap: 15px;
+  padding: 21px;
+  border-radius: 8px;
+  animation: toast-arrival 0.3s ease-out;
+}
+.city-toast .route-bullet {
+  width: 29px;
+  height: 29px;
+  font-size: 19px;
+}
+.city-toast strong {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--lime);
+}
+.city-toast p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 8px 0 10px;
+}
+.city-toast a {
+  font-size: 11px;
+}
+.city-toast > button {
+  background: none;
+  color: var(--paper);
+  padding: 0;
+  font-size: 23px;
+  align-self: flex-start;
+  min-width: 25px;
+}
+@keyframes toast-arrival {
+  from {
+    transform: translateY(10px);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@media (min-width: 1500px) {
+  .hero-rat-button {
+    height: 230px;
+  }
+}
+@media (max-width: 1150px) {
+  .hero-rat-button {
+    top: 74px;
+    height: 200px;
+  }
+  .local-inner {
+    gap: 15px;
+  }
+  .local-brand small {
+    display: none;
+  }
+  .local-brand {
+    gap: 7px;
+  }
+  .local-stops a {
+    font-size: 9px;
+  }
+}
+@media (max-width: 900px) {
+  .hero-rat-button {
+    left: 8%;
+    width: 85%;
+    height: 170px;
+    top: 78px;
+  }
+  .local-brand > span:last-child {
+    display: none;
+  }
+  .local-inner {
+    gap: 14px;
+  }
+  .city-play-grid {
+    gap: 22px;
+    grid-template-columns: 1.2fr 1fr;
+  }
+  .manhole-scene {
+    width: 205px;
+    height: 205px;
+  }
+  .ticket-fact {
+    padding-inline: 22px;
+  }
+  .ticket-bottom {
+    padding-inline: 18px;
+  }
+}
+@media (max-width: 640px) {
+  html {
+    scroll-padding-top: 100px;
+  }
+  .hero-rat-button {
+    width: 80%;
+    left: 10%;
+    height: 155px;
+    top: 43px;
+  }
+  .pizza-slice {
+    width: 36px;
+    height: 40px;
+    right: 3%;
+  }
+  .pizza-hint {
+    font-size: 7px;
+    bottom: -6px;
+  }
+  .local-inner {
+    min-height: 78px;
+    gap: 8px;
+    width: calc(100% - 24px);
+  }
+  .local-brand .route-bullet {
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
+  }
+  .local-stops a {
+    font-size: 8px;
+    line-height: 1.3;
+    padding-top: 23px;
+    padding-inline: 3px;
+  }
+  .local-stops::before {
+    top: 28px;
+  }
+  .station-dot {
+    width: 12px;
+    height: 12px;
+    margin-bottom: 8px;
+  }
+  .local-train {
+    width: 22px;
+    height: 11px;
+    top: 5px;
+    gap: 2px;
+    padding: 3px;
+  }
+  .local-train i {
+    width: 4px;
+    height: 4px;
+  }
+  .local-train::after {
+    width: 14px;
+    left: 4px;
+  }
+  .motion-switch {
+    padding: 7px;
+    font-size: 8px;
+    max-width: 52px;
+    white-space: normal;
+    line-height: 1.6;
+  }
+  .motion-switch span:first-child {
+    display: none;
+  }
+  .city-corner {
+    padding-block: 45px;
+  }
+  .local-sign {
+    display: none;
+  }
+  .city-play-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .ticket-top {
+    font-size: 8px;
+    padding-inline: 20px;
+  }
+  .ticket-fact {
+    min-height: 255px;
+  }
+  .ticket-fact > strong {
+    font-size: 56px;
+  }
+  .souvenir-ticket {
+    grid-template-columns: 1fr;
+  }
+  .souvenir-ticket ul {
+    width: 100%;
+  }
+  .city-toast {
+    right: 18px;
+    bottom: 18px;
+    padding: 17px;
+    gap: 12px;
+  }
+}
+html[data-motion="off"] {
+  scroll-behavior: auto !important;
+}
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

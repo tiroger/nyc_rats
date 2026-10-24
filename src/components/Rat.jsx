@@ -10,6 +10,7 @@ export default function Rat({ className = "", label, ...props }) {
     >
       {label && <title>{label}</title>}
       <path
+        className="rat-tail"
         d="M51 99C-5 130 4 60 31 73C44 79 29 91 18 85"
         stroke="currentColor"
         strokeWidth="6"
@@ -36,7 +37,13 @@ export default function Rat({ className = "", label, ...props }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="175" cy="80" r="4.5" fill="var(--rat-detail, #f5f3e9)" />
+      <circle
+        className="rat-eye"
+        cx="175"
+        cy="80"
+        r="4.5"
+        fill="var(--rat-detail, #f5f3e9)"
+      />
       <circle cx="214" cy="97" r="4" fill="var(--rat-detail, #f5f3e9)" />
       <path
         d="m201 98 27-13m-25 17 28 4m-34 0 23 15"

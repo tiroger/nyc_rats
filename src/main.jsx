@@ -7,8 +7,10 @@ import "@fontsource/dm-sans/latin-700.css";
 import "@fontsource/space-mono/latin-400.css";
 import "@fontsource/space-mono/latin-700.css";
 import App from "./App.jsx";
+import { CityProvider } from "./components/CityPlay.jsx";
 import "./style.css";
 import "./insights.css";
+import "./city-play.css";
 
 class ErrorBoundary extends React.Component {
   state = { failed: false };
@@ -32,7 +34,9 @@ class ErrorBoundary extends React.Component {
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      <CityProvider>
+        <App />
+      </CityProvider>
     </ErrorBoundary>
   </React.StrictMode>,
 );

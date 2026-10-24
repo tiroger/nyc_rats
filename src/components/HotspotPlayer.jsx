@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useCityPlay } from "./CityPlay.jsx";
 
 export default function HotspotPlayer({
   coverage,
@@ -9,23 +10,15 @@ export default function HotspotPlayer({
   const first = Number(coverage.from.slice(0, 4));
   const last = Number(coverage.to.slice(0, 4)) - 1;
   const [playing, setPlaying] = useState(false);
-  const [reduced, setReduced] = useState(
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
+  const { motion, reduced } = useCityPlay();
   useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => {
-      setReduced(media.matches);
-      if (media.matches) setPlaying(false);
-    };
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
+    if (!motion) setPlaying(false);
+  }, [motion]);
   useEffect(() => {
     if (activeYear === null) setPlaying(false);
   }, [activeYear]);
   useEffect(() => {
-    if (!playing || reduced) return;
+    if (!playing || !motion) return;
     if (activeYear >= last) {
       setPlaying(false);
       return;
@@ -35,7 +28,7 @@ export default function HotspotPlayer({
       1200,
     );
     return () => clearTimeout(timer);
-  }, [playing, reduced, activeYear, first, last, onFrame]);
+  }, [playing, motion, activeYear, first, last, onFrame]);
   const year = activeYear ?? last;
   return (
     <div className="hotspot-player">
@@ -57,7 +50,7 @@ export default function HotspotPlayer({
             playing ? "Pause hotspot animation" : "Play hotspot animation"
           }
           aria-pressed={playing}
-          disabled={reduced || last < first}
+          disabled={!motion || last < first}
           onClick={() => {
             if (playing) setPlaying(false);
             else {
@@ -105,10 +98,10 @@ export default function HotspotPlayer({
           Back to latest 12 months
         </button>
       )}
-      {reduced && (
+      {!motion && (
         <p className="player-reduced">
-          Reduced motion is on. Use the year slider or next-year button to
-          explore.
+          {reduced ? "Reduced motion is on." : "Motion is paused."} Use the year
+          slider or next-year button to explore.
         </p>
       )}
     </div>
