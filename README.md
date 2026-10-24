@@ -67,8 +67,6 @@ Optional: add a repository Actions secret named `SOCRATA_APP_TOKEN`. It is passe
 
 The source audit, build, and browser checks must pass before the scheduled snapshot is committed or a deployment runs. GitHub suppresses follow-on push workflows for commits made with `GITHUB_TOKEN`; the scheduled workflow itself proceeds to deploy the tested artifact. Non-fast-forward snapshot pushes fail safely rather than overwriting another developer's work. Failed refreshes leave the last successful deployment live. Check the Actions tab for failure details and rerun the workflow after resolving them. GitHub may disable scheduled workflows after 60 days without repository activity; successful daily snapshot commits normally keep activity current.
 
-No commit signing, sign-off trailers, or AI attribution trailers are added by this workflow.
-
 ## Project layout
 
 - `src/App.jsx`: page, linked filters, sharing, and CSV export.
@@ -83,4 +81,4 @@ The original notebooks, CSVs, Tableau workbook, and figures remain in the reposi
 
 ## Credits
 
-Original research: Mina Bansal, Roger Lefort, Hansen Xu, and Chi-Kuang Chen. Source data: City of New York, Office of Technology and Innovation. This is an independent project and is not affiliated with the City of New York.
+Website created by Roger Lefort. Original research by Roger Lefort, Mina Bansal, Hansen Xu, and Chi-Kuang Chen. Source data: City of New York, Office of Technology and Innovation. This is an independent project and is not affiliated with the City of New York.
