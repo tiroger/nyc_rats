@@ -1,10 +1,14 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-test("Night shift turns the whole atlas after dark, persists, and turns back", async ({ page }) => {
+test("Night shift is an easter egg behind the map's compass, persists, and turns back", async ({ page }) => {
   await page.goto("./");
   await page.getByTestId("total-reports").waitFor();
-  const toggle = page.getByRole("button", { name: "Night shift", exact: true });
+  // No switch in the navigation: the compass is the only way in.
+  await expect(
+    page.getByRole("navigation", { name: "Rat Local page stops" }).locator("..").getByRole("button", { name: /night/i }),
+  ).toHaveCount(0);
+  const toggle = page.getByRole("button", { name: "Night-shift map" });
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   await toggle.click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
@@ -14,8 +18,7 @@ test("Night shift turns the whole atlas after dark, persists, and turns back", a
   await expect(page.locator(".street-layer")).toBeAttached();
   await expect(page.getByRole("region", { name: "Night shift controls" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "The late-night buffet." })).toBeAttached();
-  // The map's compass is a shortcut to the same switch.
-  await expect(page.getByRole("button", { name: "Night-shift map" })).toHaveAttribute("aria-pressed", "true");
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
   await page.getByRole("button", { name: "Lights on" }).click();
@@ -28,7 +31,7 @@ test("Night shift turns the whole atlas after dark, persists, and turns back", a
 
 test("the curbside playground responds to its controls", async ({ page }) => {
   await page.goto("./");
-  await page.getByRole("button", { name: "Night shift", exact: true }).click();
+  await page.getByRole("button", { name: "Night-shift map" }).click();
   const status = page.getByTestId("curbside-status");
   await status.scrollIntoViewIfNeeded();
   await expect(status).toContainText("pieces of trash on the curb");
@@ -44,7 +47,7 @@ test("the curbside playground responds to its controls", async ({ page }) => {
 
 test("Night shift stays readable and accessible, and stills with reduced motion", async ({ page }) => {
   await page.goto("./");
-  await page.getByRole("button", { name: "Night shift", exact: true }).click();
+  await page.getByRole("button", { name: "Night-shift map" }).click();
   await page.getByRole("button", { name: "Dismiss discovery" }).click();
   await page.getByTestId("curbside-status").waitFor();
   const results = await new AxeBuilder({ page })

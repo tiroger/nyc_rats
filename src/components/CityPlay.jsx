@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import Rat from "./Rat.jsx";
-import { LineBullet, STOPS, StationSign, TransferLink } from "./Wayfinding.jsx";
+import { LineBullet, STOPS, StationSign, TransferLink, jumpTo } from "./Wayfinding.jsx";
 import { Litter } from "../night/Litter.jsx";
 import {
   monthLabel,
@@ -207,22 +207,6 @@ export function MotionSwitch() {
   );
 }
 
-export function NightSwitch() {
-  const { night, setNight } = useCityPlay();
-  return (
-    <button
-      className="night-switch mono"
-      aria-pressed={night}
-      onClick={() => setNight((value) => !value)}
-    >
-      <span className="night-switch-icon" aria-hidden="true">
-        <i />
-      </span>
-      <span className="night-switch-label">Night shift</span>
-    </button>
-  );
-}
-
 export function HeroRat() {
   const { discover } = useCityPlay();
   const [bites, setBites] = useState(0);
@@ -326,6 +310,7 @@ export function SubwayNav() {
               <a
                 href={`#${stop.id}`}
                 aria-current={active === index ? "location" : undefined}
+                onClick={(event) => jumpTo(event, stop.id)}
               >
                 <span className="station-dot">
                   <LineBullet id={stop.id} size="xs" />
@@ -346,10 +331,7 @@ export function SubwayNav() {
             </div>
           ))}
         </nav>
-        <div className="local-switches">
-          <NightSwitch />
-          <MotionSwitch />
-        </div>
+        <MotionSwitch />
       </div>
     </div>
   );

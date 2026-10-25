@@ -58,10 +58,18 @@ export default function NightLayer() {
     scan();
     const scanner = setInterval(scan, 600);
 
+    // Element boxes, measured at most once per frame however many rats and
+    // flies ask for them.
+    const boxes = new Map();
+    const box = (el) => {
+      let r = boxes.get(el);
+      if (!r) boxes.set(el, (r = el.getBoundingClientRect()));
+      return r;
+    };
     // Where a rat stands: the street, a ledge's top edge, or a litter pile.
     const floorOf = (rat) => {
       if (rat.floor === "street") return { y: h - 4, x0: -120, x1: w + 120 };
-      const r = rat.el?.getBoundingClientRect();
+      const r = rat.el && box(rat.el);
       if (!r || !rat.el.isConnected) return null;
       return rat.floor === "ledge"
         ? { y: r.top + 1, x0: r.left + 6, x1: r.right - 6 }
@@ -201,7 +209,7 @@ export default function NightLayer() {
         // Diving into a nearby pile when spooked.
         if (rat.state === "flee")
           for (const el of hideouts) {
-            const r = el.getBoundingClientRect();
+            const r = box(el);
             if (Math.abs(rat.x - (r.left + r.width / 2)) < 50 && Math.abs(y - r.bottom) < 40) {
               rat.hidden = rand(2.5, 6);
               break;
@@ -246,7 +254,7 @@ export default function NightLayer() {
       // Flies over the trash.
       ctx.fillStyle = "rgba(20, 16, 10, 0.9)";
       hideouts.forEach((el, i) => {
-        const r = el.getBoundingClientRect();
+        const r = box(el);
         const cx = r.left + r.width / 2,
           cy = r.top + 4;
         for (let j = 0; j < 6; j++) {
@@ -286,6 +294,7 @@ export default function NightLayer() {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       if (!document.hidden) {
+        boxes.clear();
         step(dt);
         draw();
       }

@@ -422,9 +422,15 @@ export default function Curbside() {
       if (truck) drawTruck(ctx, truck.x, g, clock);
     };
 
-    let frame,
-      last = performance.now();
+    let frame = 0,
+      last = performance.now(),
+      visible = true;
     const loop = (now) => {
+      // Off screen, the curb sleeps until it scrolls back into view.
+      if (!visible) {
+        frame = 0;
+        return;
+      }
       const dt = Math.min(0.033, (now - last) / 1000);
       last = now;
       if (!document.hidden) {
@@ -433,6 +439,17 @@ export default function Curbside() {
       }
       frame = requestAnimationFrame(loop);
     };
+    const sight = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible && motion && !frame) {
+          last = performance.now();
+          frame = requestAnimationFrame(loop);
+        }
+      },
+      { rootMargin: "120px" },
+    );
+    sight.observe(wrapRef.current);
     // Let the first trash settle, then run (or freeze if motion is off).
     for (let i = 0; i < 180; i++) Engine.update(engine, 1000 / 60);
     if (motion) frame = requestAnimationFrame(loop);
@@ -461,6 +478,7 @@ export default function Curbside() {
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
+      sight.disconnect();
       canvas.removeEventListener("pointermove", onPointer);
       canvas.removeEventListener("pointerleave", offPointer);
       Mouse.clearSourceEvents(mouse);

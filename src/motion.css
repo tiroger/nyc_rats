@@ -389,27 +389,18 @@
 .night-shift .zip-shape {
   stroke: #4a6a57;
 }
+/* A radial-gradient fill reads as a glow and costs nothing extra to paint.
+   An SVG blur filter, or any animation inside the map's SVG, makes the
+   browser redraw the whole map every frame. */
 .night-shift .report-bubble,
 .night-shift .bubble-ghost {
-  fill: var(--lime);
+  fill: url(#night-bubble);
   stroke: #f4ffc4;
   stroke-width: 0.5;
+  stroke-opacity: 0.6;
 }
-.night-shift .report-bubble {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: breathe var(--breathe, 3s) ease-in-out var(--breathe-delay, 0s)
-    infinite;
-}
-.night-shift .bubble-layer {
-  filter: url(#night-glow);
-}
-@keyframes breathe {
-  50% {
-    transform: scale(1.12);
-    fill-opacity: 0.8;
-  }
-}
+
+
 .night-shift .map-label {
   fill: var(--lime);
   stroke: #121d17;
