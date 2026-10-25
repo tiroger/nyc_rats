@@ -1613,27 +1613,48 @@ def _(mo, sweep_period, sweep_results):
     chain_lots_per_colony = mo.ui.range_slider(1.0, 8.0, value=[3.0, 7.0], step=0.5, label="Lots per colony territory", show_value=True)
     chain_colony_size = mo.ui.range_slider(5, 100, value=[40, 50], step=5, label="Rats per colony", show_value=True)
     chain_sensitivity = mo.ui.range_slider(0.3, 1.0, value=[_sens, 1.0], step=0.01, label="Inspector sensitivity (blocks)", show_value=True)
+    chain_rats_per_block = mo.ui.range_slider(2, 220, value=[50, 124], step=1, label="Rats per infested block", show_value=True)
     mo.vstack(
         [
             mo.md(
                 "### 6.4 · From infested blocks to rats\n\n"
                 "Infested blocks are drawn between the detection-rate and stratified "
-                "estimates (uniformly, the honest summary of 6.3), scaled up for "
-                "blocks inspectors missed, then split into colonies: a block with *k* "
-                "infested lots holds max(1, *k* ÷ lots-per-colony) colonies, using the "
-                f"sweeps' own distribution of *k*. Inspector sensitivity defaults to "
-                f"{_sens:.0%}–100% from 6.2."
+                "estimates (uniformly, the honest summary of 6.3) and scaled up for "
+                f"blocks inspectors missed (sensitivity defaults to {_sens:.0%}–100% from "
+                "6.2). Then two routes turn blocks into rats:\n\n"
+                "- **Route A, colonies.** A block with *k* infested lots holds max(1, "
+                "*k* ÷ lots-per-colony) colonies, using the sweeps' own distribution of "
+                "*k*, times rats per colony. Colony size has no traceable field source; "
+                "40–50 is Auerbach's.\n"
+                "- **Route B, rats per block measured in Baltimore.** Baltimore's "
+                "row-house blocks are built around a central alley, so rats per alley is "
+                "rats per infested block. Removal trapping in 20 alleys of high-density "
+                "neighbourhoods found **49.6 ± 12.5** rats per alley one year and "
+                "**123.8 ± 42.2** the next (Glass et al. 2009), with sites ranging from 2 "
+                "to 217. That replaces colony size and lots-per-colony with a field "
+                "measurement, from a different city."
             ),
+            chain_sensitivity,
+            mo.md("**Route A**"),
             chain_lots_per_colony,
             chain_colony_size,
-            chain_sensitivity,
+            mo.md("**Route B**"),
+            chain_rats_per_block,
         ]
     )
-    return chain_colony_size, chain_lots_per_colony, chain_sensitivity
+    return chain_colony_size, chain_lots_per_colony, chain_rats_per_block, chain_sensitivity
 
 
 @app.cell
-def _(chain_colony_size, chain_lots_per_colony, chain_sensitivity, np, sweep_period, sweep_results):
+def _(
+    chain_colony_size,
+    chain_lots_per_colony,
+    chain_rats_per_block,
+    chain_sensitivity,
+    np,
+    sweep_period,
+    sweep_results,
+):
     _r = sweep_results[sweep_period.value]
     _rng = np.random.default_rng(17)
     _draws = 20_000
@@ -1649,30 +1670,59 @@ def _(chain_colony_size, chain_lots_per_colony, chain_sensitivity, np, sweep_per
     _rats = _blocks * _colonies * _rng.uniform(*chain_colony_size.value, _draws)
     chain_interval = np.percentile(_rats, [5, 50, 95])
     chain_colonies = np.percentile(_blocks * _colonies, [5, 50, 95])
-    return chain_colonies, chain_interval
+    # Route B: the same infested blocks, times Baltimore's rats per alley.
+    block_route_interval = np.percentile(
+        _blocks * _rng.uniform(*chain_rats_per_block.value, _draws), [5, 50, 95]
+    )
+    return block_route_interval, chain_colonies, chain_interval
 
 
 @app.cell(hide_code=True)
-def _(chain_colonies, chain_colony_size, chain_interval, mo, sweep_period, sweep_results):
+def _(
+    block_route_interval,
+    chain_colonies,
+    chain_colony_size,
+    chain_interval,
+    chain_rats_per_block,
+    mo,
+    sweep_period,
+    sweep_results,
+):
     _r = sweep_results[sweep_period.value]
     _l = _r["lots_est"]["total"]
     _burrow_lo = _l * _r["burrow_share"] * 1 * 1
     _burrow_hi = _l * _r["burrow_share"] * 2 * 12 / min(_r["block_rates"]["inspector_sensitivity"], 1)
+    _a, _b = chain_interval, block_route_interval
+    _overlap = _a[0] <= _b[2] and _b[0] <= _a[2]
+    _ratio = _b[1] / _a[1]
     mo.vstack(
         [
             mo.hstack(
                 [
-                    mo.stat(f"{chain_colonies[1]:,.0f}", label="Colonies (median)", caption=f"90%: {chain_colonies[0]:,.0f}–{chain_colonies[2]:,.0f}"),
-                    mo.stat(f"{chain_interval[1] / 1e6:.2f} M", label=f"Rats, {sweep_period.value} (median)", caption=f"90%: {chain_interval[0] / 1e6:.2f}–{chain_interval[2] / 1e6:.2f} million"),
+                    mo.stat(f"{chain_colonies[1]:,.0f}", label="Route A: colonies (median)", caption=f"90%: {chain_colonies[0]:,.0f}–{chain_colonies[2]:,.0f}"),
+                    mo.stat(f"{_a[1] / 1e6:.2f} M", label=f"Route A: rats, {sweep_period.value}", caption=f"90%: {_a[0] / 1e6:.2f}–{_a[2] / 1e6:.2f} million"),
+                    mo.stat(f"{_b[1] / 1e6:.2f} M", label=f"Route B: rats, {sweep_period.value}", caption=f"90%: {_b[0] / 1e6:.2f}–{_b[2] / 1e6:.2f} million"),
                 ],
                 widths="equal",
             ),
             mo.md(
-                f"With {chain_colony_size.value[0]}–{chain_colony_size.value[1]} rats per "
-                f"colony, the sweep-based chain gives **{chain_interval[0] / 1e6:.2f}–"
-                f"{chain_interval[2] / 1e6:.2f} million rats** ({sweep_period.value}). "
-                "Every input except colony size now comes from NYC data or NYC-scale "
-                "field evidence.\n\n"
+                f"**Route A** (colonies of {chain_colony_size.value[0]}–"
+                f"{chain_colony_size.value[1]}) gives **{_a[0] / 1e6:.2f}–{_a[2] / 1e6:.2f} "
+                f"million rats**; **Route B** ({chain_rats_per_block.value[0]}–"
+                f"{chain_rats_per_block.value[1]} rats per infested block, measured in "
+                f"Baltimore) gives **{_b[0] / 1e6:.2f}–{_b[2] / 1e6:.2f} million** "
+                f"({sweep_period.value}). "
+                + (
+                    f"The two routes overlap, and their medians differ by a factor of "
+                    f"{max(_ratio, 1 / _ratio):.1f}: an assumed colony size and a measured "
+                    "density from another city point to the same range."
+                    if _overlap
+                    else "The two routes do **not** overlap, so either the colony "
+                    "assumptions or the transfer from Baltimore is wrong."
+                )
+                + " Route B's weak points are the transfer itself (NYC blocks are larger "
+                "and denser, and NYC has subways and high-rises) and removal trapping, "
+                "which counts only the rats that can be trapped, so it leans low.\n\n"
                 f"**Burrow cross-check.** {_r['burrow_share']:.0%} of lots with active "
                 "signs in sweeps had burrows recorded. Taking NYC Health's own 1–12 rats "
                 "per active burrow and 1–2 burrows per lot gives "
@@ -1972,7 +2022,17 @@ def _(alt, mo, results):
 
 
 @app.cell(hide_code=True)
-def _(chain_interval, mo, open_model, repro, reproduction_gap, results, sim_grid, sweep_results):
+def _(
+    block_route_interval,
+    chain_interval,
+    mo,
+    open_model,
+    repro,
+    reproduction_gap,
+    results,
+    sim_grid,
+    sweep_results,
+):
     _spread = results.n.max() / results.n.min()
     _sweep_gap = sweep_results["2010–11"]["lots_est"]["total"] / repro["lincoln_petersen"] - 1
     _now = sweep_results["2023–24"]
@@ -1994,11 +2054,13 @@ def _(chain_interval, mo, open_model, repro, reproduction_gap, results, sim_grid
             abs(_sweep_gap) <= 0.25,
         ),
         (f"Sweep-based methods bracket today's infested blocks within a factor of 2.5 ({_bracket:.1f}×)", _bracket <= 2.5),
-        ("Colony size and lots-per-colony are supported by NYC evidence", False),
+        ("Rats per infested block has field evidence: from a comparable city (Baltimore), not NYC", "partial"),
         ("Proactive inspections are flagged in the public data, not inferred (see 6.7)", False),
     ]
-    _ready = all(ok for _, ok in readiness)
-    _lines = "\n".join(f"- {'✅' if ok else '❌'} {text}" for text, ok in readiness)
+    _ready = all(not isinstance(ok, str) and bool(ok) for _, ok in readiness)
+    _lines = "\n".join(
+        f"- {'⚠️' if isinstance(ok, str) else '✅' if ok else '❌'} {text}" for text, ok in readiness
+    )
     mo.vstack(
         [
             mo.md("### Is this ready to publish?"),
@@ -2011,10 +2073,12 @@ def _(chain_interval, mo, open_model, repro, reproduction_gap, results, sim_grid
                     "inspection sweeps close much of the gap: they give an independent "
                     f"2010–11 infested-lot figure ({_sweep_gap:+.0%} vs the reproduction) "
                     "and bracket today's infested blocks "
-                    f"at {min(_block_methods):,.0f}–{max(_block_methods):,.0f}. But rats per "
-                    "colony still has no NYC evidence, and it scales the head count "
-                    f"directly (the current settings give {chain_interval[0] / 1e6:.1f}–"
-                    f"{chain_interval[2] / 1e6:.1f} million). The most defensible thing "
+                    f"at {min(_block_methods):,.0f}–{max(_block_methods):,.0f}. Turning blocks "
+                    "into rats now has two routes, an assumed colony size "
+                    f"({chain_interval[0] / 1e6:.1f}–{chain_interval[2] / 1e6:.1f} million) "
+                    "and rats per block measured in Baltimore "
+                    f"({block_route_interval[0] / 1e6:.1f}–{block_route_interval[2] / 1e6:.1f} "
+                    "million), but neither rests on a count of NYC rats. The most defensible thing "
                     "the site could show is the **share of blocks with active rat signs**, "
                     "labelled as an estimate from city inspections and 311 reports, not a "
                     "rat census. A field survey (6.5) or the records in 6.7 would be the "
@@ -2028,8 +2092,19 @@ def _(chain_interval, mo, open_model, repro, reproduction_gap, results, sim_grid
 
 
 @app.cell(hide_code=True)
-def _(PUBLISHED, chain_interval, open_model, readiness, repro, reproduction_gap, results, sweep_period, sweep_results):
-    _ready = all(ok for _, ok in readiness)
+def _(
+    PUBLISHED,
+    block_route_interval,
+    chain_interval,
+    open_model,
+    readiness,
+    repro,
+    reproduction_gap,
+    results,
+    sweep_period,
+    sweep_results,
+):
+    _ready = all(not isinstance(ok, str) and bool(ok) for _, ok in readiness)
     _then, _now = sweep_results["2010–11"], sweep_results["2023–24"]
     _now_blocks = [_now["blocks_est"]["total"], _now["detection_blocks"], _now["block_chapman"]["chapman"]]
     summary_text = (
@@ -2049,11 +2124,12 @@ def _(PUBLISHED, chain_interval, open_model, readiness, repro, reproduction_gap,
         f"as a field survey they put 2010–11 infested lots at {_then['lots_est']['total']:,.0f} "
         f"({_then['lots_est']['total'] / repro['lincoln_petersen'] - 1:+.0%} vs the reproduction), "
         "and 2023–24 infested blocks at "
-        f"{min(_now_blocks):,.0f}–{max(_now_blocks):,.0f}. With colony territories of "
-        "3–7 lots (from home-range studies and NYC lot sizes) and 40–50 rats per "
-        f"colony, that is **{chain_interval[0] / 1e6:.1f}–{chain_interval[2] / 1e6:.1f} "
-        f"million rats** ({sweep_period.value}), but colony size still has no NYC "
-        "evidence. "
+        f"{min(_now_blocks):,.0f}–{max(_now_blocks):,.0f}. Turning blocks into rats "
+        "two ways (colony territories of 3–7 lots with 40–50 rats each, or the rats "
+        "per block measured in Baltimore's alleys) gives "
+        f"**{chain_interval[0] / 1e6:.1f}–{chain_interval[2] / 1e6:.1f} million** and "
+        f"**{block_route_interval[0] / 1e6:.1f}–{block_route_interval[2] / 1e6:.1f} "
+        f"million rats** ({sweep_period.value}). Neither rests on a count of NYC rats. "
         + ("Ready to publish." if _ready else "**Not ready to publish** (section 8).")
     )
     return (summary_text,)
@@ -2081,8 +2157,9 @@ def _(a5_positive_share, mo, repro_variants, validation):
     | A4 | Stable marks (BBLs) | all | Small share missing from PLUTO or condo units (§4 A4) | Bounded by variants in §3 |
     | A5 | A report means an infestation | all | {a5_positive_share:.0%} of inspected reported lots showed active signs (§4 A5) | False positives inflate N̂ |
     | A6a | Colony territory = 3–7 lots (Auerbach: 1) | §5.6, §6.4 | Home ranges 30–45 m across (Baltimore) vs. 234 m² median NYC lot; NYC rats within ~200 m are kin; sweeps find 2–6 infested lots per infested block | Fewer lots per colony → more colonies → more rats |
-    | A6b | 40–50 rats per colony | §5.6, §6.4 | Untraceable lore; NYC Health says 1–12 rats per active burrow; **no NYC colony count** | Scales the head count directly |
-    | W1 | Proactive sweeps = ≥5 lots on a block in a day, ≤20% complaint-preceded, ≥70% coverage | §6 | Sweeps fall in the programme's published neighbourhoods; coverage 73–88% | Misclassified visits blur the survey |
+    | A6b | 40–50 rats per colony (route A) | §5.6, §6.4 | Untraceable lore; NYC Health says 1–12 rats per active burrow; **no NYC colony count** | Scales the head count directly |
+    | B1 | Baltimore's 50–124 rats per alley apply to an infested NYC block (route B) | §6.4 | Removal trapping in 20 high-density Baltimore alleys (Glass et al. 2009); sites range 2–217 | Bigger, denser NYC blocks → too low; trappable rats only → too low; high-density sites → too high elsewhere |
+    | W1 | Proactive sweeps = ≥5 lots on a block in a day, ≤20% complaint-preceded, ≥70% coverage | §6 | Sweeps fall mostly in the programme's published neighbourhoods and cover most of each block (§6.1) | Misclassified visits blur the survey |
     | W2 | Swept blocks' infestation rates apply citywide within a stratum (311 intensity × density) | §6.3 | Swept neighbourhoods are high-risk, so likely an overstatement | Stratified estimate is an upper end |
     | W3 | Swept neighbourhoods' 311 detection rate applies citywide | §6.3 | People report less elsewhere, so likely an understatement | Detection-rate estimate is a lower end |
     | W4 | Inspector sensitivity between the two-source value and 100% | §6.2, §6.4 | Two-source assumes independence; positive dependence biases it up | Missed blocks scale the total |
@@ -2120,6 +2197,8 @@ def _(mo, sources):
     - Fienberg, S. E. (1972). The multiple recapture census for closed populations and incomplete 2^k contingency tables. *Biometrika* 59, 591–603.
     - Davis, D. E. & Fales, W. T. (1950). The rat population of Baltimore, 1949. *American Journal of Hygiene* 52, 143–146.
     - Easterbrook, J. D. et al. (2005). Norway rat population in Baltimore, Maryland, 2004. *Vector-Borne and Zoonotic Diseases* 5, 296–299.
+    - Glass, G. E. et al. (2009). Trophic garnishes: cat–rat interactions in an urban environment. *PLoS ONE* 4, e5794.
+    - Glass, G. E. et al. (2016). Multiple paternity in urban Norway rats: extended ranging for mates. *Vector-Borne and Zoonotic Diseases* 16, 342–348.
     - Gardner-Santana, L. C. et al. (2009). Commensal ecology, urban landscapes, and their influence on the genetic characteristics of city-dwelling Norway rats. *Molecular Ecology* 18, 2766–2778.
     - Combs, M. et al. (2018). Spatial population genomics of the brown rat (*Rattus norvegicus*) in New York City. *Molecular Ecology* 27, 83–98.
     - Byers, K. A. et al. (2019). Rats about town: a systematic review of rat movement in urban ecosystems. *Frontiers in Ecology and Evolution* 7, 13.
