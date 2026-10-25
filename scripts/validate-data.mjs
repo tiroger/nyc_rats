@@ -17,7 +17,7 @@ const details = JSON.parse(
   ),
 );
 console.log("Validated expanded data:", validateDetails(details, data));
-for (const file of ["boroughs.geojson", "zip-codes.geojson"]) {
+for (const file of ["boroughs.geojson", "zip-codes.geojson", "subway.geojson"]) {
   const geo = JSON.parse(
     await readFile(new URL(`../public/geo/${file}`, import.meta.url), "utf8"),
   );

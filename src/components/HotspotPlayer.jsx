@@ -48,6 +48,46 @@ function YearTrack({ months, first, last, year, playing, active }) {
   );
 }
 
+// The year slider drawn as a subway line: every year a station, a few
+// labeled like express stops, and a train that pulls in to the current one.
+// The native range input sits on top, invisible, so it keeps its keyboard and
+// screen-reader behavior; stations sit where its thumb would.
+function YearLine({ first, last, year, active }) {
+  const years = Array.from({ length: last - first + 1 }, (_, i) => first + i);
+  const at = (y) => (last === first ? 0.5 : (y - first) / (last - first));
+  const place = (y) => ({
+    left: `calc(var(--thumb) / 2 + (100% - var(--thumb)) * ${at(y)})`,
+  });
+  return (
+    <span className="year-stations" aria-hidden="true">
+      <span className="year-stations-track" />
+      {years.map((y) => (
+        <span
+          key={y}
+          className={`year-station ${y === year ? "is-current" : ""} ${y === first || y === last || y % 5 === 0 ? "is-express" : ""}`}
+          style={place(y)}
+        >
+          <i />
+          {(y === first || y === last || y % 5 === 0) && y !== year && (
+            <small>{y}</small>
+          )}
+        </span>
+      ))}
+      <span
+        className={`year-train ${active ? "is-active" : ""}`}
+        style={place(year)}
+      >
+        <span className="year-train-car">
+          <i />
+          <i />
+          <i />
+        </span>
+        <b>’{String(year).slice(2)}</b>
+      </span>
+    </span>
+  );
+}
+
 export default function HotspotPlayer({
   coverage,
   activeYear,
@@ -123,16 +163,25 @@ export default function HotspotPlayer({
               active={activeYear !== null}
             />
           )}
-          <input
-            type="range"
-            min={first}
-            max={last}
-            value={year}
-            onChange={(e) => {
-              setPlaying(false);
-              onFrame(Number(e.target.value));
-            }}
-          />
+          <span className="year-rail">
+            <YearLine
+              first={first}
+              last={last}
+              year={year}
+              active={activeYear !== null}
+            />
+            <input
+              type="range"
+              className="year-input"
+              min={first}
+              max={last}
+              value={year}
+              onChange={(e) => {
+                setPlaying(false);
+                onFrame(Number(e.target.value));
+              }}
+            />
+          </span>
         </label>
         <output className="mono">
           {activeYear === null && (
