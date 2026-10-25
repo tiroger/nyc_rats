@@ -683,13 +683,13 @@ h3 {
   max-width: calc(100% - 85px);
 }
 .map-detail > strong {
-  font-size: 19px;
+  font-size: 22px;
 }
 .map-detail > span:not(.eyebrow) {
-  font-size: 12px;
+  font-size: 14px;
 }
 .map-detail small {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
 }
 .detail-close {

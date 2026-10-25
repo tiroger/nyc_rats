@@ -711,7 +711,7 @@ export default function AtlasMap({
         )}
         {hoverRow && hoverAt && (
           <div
-            className={`hover-card ${hoverAt.y < 230 ? "below" : "above"} ${hoverAt.x > hoverAt.width - 130 ? "align-end" : hoverAt.x < 130 ? "align-start" : ""}`}
+            className={`hover-card ${hoverAt.y < 300 ? "below" : "above"} ${hoverAt.x > hoverAt.width - 160 ? "align-end" : hoverAt.x < 160 ? "align-start" : ""}`}
             style={{ left: hoverAt.x, top: hoverAt.y }}
             aria-hidden="true"
             data-testid="map-hover-card"
