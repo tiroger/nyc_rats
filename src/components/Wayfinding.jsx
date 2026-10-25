@@ -16,6 +16,7 @@ const ABBREVIATIONS = {
 // letters meet contrast; pale Manhattan takes dark lettering instead.
 const BULLET_COLORS = {
   ...COLORS,
+  "All NYC": "#263c2e",
   Bronx: "#a8492b",
   Queens: "#67649a",
   "Staten Island": "#4b7385",
@@ -30,7 +31,7 @@ export function BoroughBullet({ borough, size = "md", out = false }) {
       className={`bullet bullet-${size} ${out ? "is-out" : ""}`}
       data-letters={letters.length}
       style={{
-        "--bullet": BULLET_COLORS[borough] || "var(--ink)",
+        "--bullet": BULLET_COLORS[borough] || "#263c2e",
         "--bullet-ink": DARK_TEXT.has(borough) ? "var(--ink)" : "#fff",
       }}
       aria-hidden="true"
