@@ -1,0 +1,579 @@
+/* Wayfinding: bullets, lines and signs in the spirit of the city's transit
+   graphics, drawn with the atlas's own borough and section colors. */
+
+/* Bullets */
+.bullet {
+  --size: 24px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--bullet);
+  color: var(--bullet-ink);
+  font-weight: 700;
+  font-size: calc(var(--size) * 0.52);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-style: normal;
+  transition:
+    background-color 0.25s,
+    color 0.25s,
+    transform 0.25s var(--ease-spring);
+}
+.bullet[data-letters="2"] {
+  font-size: calc(var(--size) * 0.42);
+}
+.bullet[data-letters="3"] {
+  font-size: calc(var(--size) * 0.31);
+  letter-spacing: 0;
+}
+.bullet-xs {
+  --size: 16px;
+}
+.bullet-sm {
+  --size: 20px;
+}
+.bullet-lg {
+  --size: 46px;
+}
+.bullet.is-out {
+  background: #d9dccf;
+  color: #858c7b;
+}
+.line-street-level {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+/* Borough filters: one bullet per borough. */
+.borough-filters button {
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 30px;
+}
+.borough-filters button[aria-pressed="true"] {
+  background: #263c2e12;
+  color: var(--ink);
+  border-color: var(--ink);
+  font-weight: 600;
+}
+.borough-filters button[aria-pressed="true"] .bullet,
+.borough-filters button:hover .bullet {
+  transform: scale(1.12);
+}
+
+/* Station signs: section headers as black signage bands. */
+.section-heading.station-sign {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 25px;
+  padding: 36px 30px 28px;
+  background: #121614;
+  color: #fff;
+  border-radius: 6px;
+}
+.station-sign::before {
+  content: "";
+  position: absolute;
+  inset: 12px 0 auto;
+  border-top: 2px solid #f5f3e9;
+}
+.station-sign > .line-bullet {
+  align-self: start;
+  margin-top: 4px;
+}
+.station-sign .eyebrow {
+  color: #b7c0b0;
+}
+.station-sign h2 {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: -1.3px;
+  margin: 6px 0 8px;
+}
+.section-heading.station-sign p {
+  color: #c9d0c3;
+}
+.sign-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+  text-align: right;
+}
+.transfers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 9px;
+}
+.transfers > span {
+  color: #8f998a;
+  letter-spacing: 1px;
+  margin-right: 4px;
+}
+.transfers a {
+  color: #fff;
+  text-decoration: none;
+  border: 1px solid #f5f3e9;
+  border-radius: 20px;
+  padding: 5px 10px;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.transfers a:hover,
+.transfers a:focus-visible {
+  background: var(--lime);
+  color: var(--ink);
+}
+.station-sign .share-button {
+  color: #fff;
+  border-color: #7d8a77;
+}
+.station-sign .small-label,
+.station-sign .local-sign {
+  color: #c9d0c3;
+}
+.methodology .station-sign {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-self: start;
+  margin-bottom: 0;
+}
+.methodology .station-sign h2 {
+  font-size: 32px;
+}
+
+/* Rat Local: section bullets on a heavier line, with transfers. */
+html {
+  scroll-padding-top: 128px;
+}
+.local-stops::before {
+  height: 6px;
+  top: 32px;
+  border-radius: 3px;
+}
+.local-stops .station-dot {
+  width: 20px;
+  height: 20px;
+  margin: 0 auto 7px;
+  border: 0;
+  background: none;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 3px var(--paper);
+  transition:
+    transform 0.25s var(--ease-spring),
+    box-shadow 0.25s;
+}
+.station-dot .bullet {
+  --size: 20px;
+  font-size: 10px;
+}
+.local-stop > a[aria-current] .station-dot {
+  background: none;
+  transform: scale(1.25);
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 5px var(--lime),
+    0 0 0 6px var(--ink);
+}
+.local-stop > a:hover .station-dot {
+  background: none;
+  transform: scale(1.12);
+}
+.local-transfers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  padding-bottom: 9px;
+}
+.local-transfers a {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.4px;
+  text-decoration: none;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 9px;
+  padding: 3px 6px;
+}
+.local-transfers a:hover,
+.local-transfers a:focus-visible {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+/* The data ticker as a platform countdown board. */
+.ticker.countdown-board {
+  background-color: #111511;
+  background-image: radial-gradient(circle, #ffffff0d 1px, transparent 1.4px);
+  background-size: 4px 4px;
+  border-block: 1px solid #000;
+  color: #ffb547;
+}
+.countdown-board .ticker-inner {
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px #ffb54766;
+}
+.board-route .route-bullet {
+  width: 22px;
+  height: 22px;
+  font-size: 13px;
+  text-shadow: none;
+}
+.countdown-board .live-dot {
+  background: #ffb547;
+  box-shadow: 0 0 6px #ffb547;
+}
+.countdown-board .live-dot.stale {
+  background: #ff6b4a;
+  box-shadow: 0 0 6px #ff6b4a;
+}
+.board-next b {
+  color: #fff3d6;
+}
+.ticker.countdown-board a {
+  color: #ffb547;
+}
+
+/* Time Machine: the year slider as a subway line. */
+.year-rail {
+  --thumb: 16px;
+  position: relative;
+  display: block;
+  height: 46px;
+}
+.year-stations {
+  position: absolute;
+  inset: 0;
+}
+.year-stations-track {
+  position: absolute;
+  left: calc(var(--thumb) / 2);
+  right: calc(var(--thumb) / 2);
+  top: 24px;
+  height: 6px;
+  border-radius: 3px;
+  background: #497564;
+}
+.year-station {
+  position: absolute;
+  top: 24px;
+  width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.year-station i {
+  display: block;
+  width: 2px;
+  height: 6px;
+  background: #faf9f2;
+}
+.year-station.is-express i {
+  width: 9px;
+  height: 9px;
+  margin-top: -1.5px;
+  border-radius: 50%;
+  background: #faf9f2;
+  border: 2px solid var(--ink);
+  box-sizing: border-box;
+}
+.year-station small {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  color: #58664d;
+  margin-top: 3px;
+  white-space: nowrap;
+}
+.year-train {
+  position: absolute;
+  top: 0;
+  width: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  transition: left 0.5s var(--ease-out);
+}
+.year-train-car {
+  position: absolute;
+  top: 0;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  width: 26px;
+  height: 12px;
+  box-sizing: border-box;
+  transform: translateX(-50%);
+  left: 0;
+  background: var(--ink);
+  border-radius: 4px 5px 2px 2px;
+}
+.year-train-car i {
+  width: 4px;
+  height: 4px;
+  background: var(--lime);
+}
+.year-train b {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  background: #faf9f2;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  transition:
+    background-color 0.25s,
+    color 0.25s;
+}
+.year-train.is-active b {
+  background: var(--ink);
+  color: var(--lime);
+}
+.year-input {
+  position: absolute;
+  inset: 8px 0 0;
+  width: 100%;
+  height: 34px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.year-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--thumb);
+  height: 30px;
+}
+.year-input::-moz-range-thumb {
+  width: var(--thumb);
+  height: 30px;
+  border: 0;
+}
+.year-rail:has(.year-input:focus-visible) .year-train b {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Frequent fliers as a station strip. */
+.zip-ranking {
+  --strip: var(--ink);
+  position: relative;
+}
+.zip-ranking::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 34px;
+  bottom: 34px;
+  width: 5px;
+  border-radius: 3px;
+  background: var(--strip);
+  transition: background-color 0.3s;
+}
+.strip-stop {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 19px;
+  height: 19px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #faf9f2;
+  border: 3px solid var(--strip);
+  transition:
+    transform 0.25s var(--ease-spring),
+    background-color 0.2s;
+}
+.zip-ranking button:hover .strip-stop {
+  transform: scale(1.12);
+}
+.zip-ranking button[aria-pressed="true"] .strip-stop {
+  background: var(--lime);
+  transform: scale(1.25);
+}
+.you-are-here {
+  font-style: normal;
+  font-size: 7px;
+  letter-spacing: 0.6px;
+  background: var(--lime);
+  color: var(--ink);
+  padding: 2px 5px;
+  border-radius: 2px;
+  margin-left: 4px;
+}
+
+/* Rat Race: each borough rides its own line. */
+.race-label {
+  gap: 8px;
+}
+.race-fill {
+  height: 7px;
+  border-radius: 4px;
+  opacity: 0.9;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 38px,
+    #faf9f2 38px 40px
+  );
+}
+.race-track:before {
+  top: 16px;
+}
+
+/* Map: borough bullets in the cards, and the optional subway layer. */
+.hover-eyebrow,
+.detail-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.map-toolbar {
+  justify-content: flex-start;
+}
+.map-hint {
+  margin-left: auto;
+}
+.subway-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  padding: 5px 11px 5px 5px;
+  border-radius: 20px;
+  border: 1px solid #c1cebc;
+  background: #faf9f2;
+  white-space: nowrap;
+}
+.subway-toggle[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.subway-toggle-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink);
+  display: grid;
+  place-items: center;
+}
+.subway-toggle-icon i {
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--lime);
+}
+.subway-toggle[aria-pressed="true"] .subway-toggle-icon {
+  background: var(--lime);
+}
+.subway-toggle[aria-pressed="true"] .subway-toggle-icon i {
+  background: var(--ink);
+}
+.subway-layer {
+  pointer-events: none;
+}
+.subway-casing,
+.subway-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  animation: trend-draw 1.4s var(--ease-out) both;
+}
+.subway-casing {
+  stroke: #f6f4e9;
+  stroke-width: 4.5;
+  opacity: 0.9;
+}
+.subway-line {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.subway-station {
+  fill: #faf9f2;
+  stroke: var(--ink);
+  animation: fade-in 0.5s ease-out 0.9s both;
+}
+.night-shift .subway-casing {
+  stroke: #121d17;
+}
+.night-shift .subway-line {
+  stroke: #f6f4e9;
+}
+.night-shift .subway-station {
+  fill: #121d17;
+  stroke: #f6f4e9;
+}
+
+@media (max-width: 1150px) {
+  .local-transfers {
+    display: none;
+  }
+  html {
+    scroll-padding-top: 115px;
+  }
+}
+@media (max-width: 900px) {
+  .board-next {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  html {
+    scroll-padding-top: 100px;
+  }
+  .section-heading.station-sign {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px 16px;
+    padding: 30px 18px 20px;
+  }
+  .station-sign::before {
+    top: 10px;
+  }
+  .station-sign .bullet-lg {
+    --size: 34px;
+  }
+  .sign-aside {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .transfers {
+    justify-content: flex-start;
+  }
+  .local-stops::before {
+    top: 27px;
+    height: 5px;
+  }
+  .local-stops .station-dot {
+    width: 16px;
+    height: 16px;
+    margin-bottom: 7px;
+  }
+  .station-dot .bullet {
+    --size: 16px;
+    font-size: 8px;
+  }
+  .race-track:before {
+    top: 19px;
+  }
+}

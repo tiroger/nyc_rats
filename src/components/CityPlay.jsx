@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import Rat from "./Rat.jsx";
+import { LineBullet, STOPS, StationSign, TransferLink } from "./Wayfinding.jsx";
 import {
   monthLabel,
   monthOffset,
@@ -219,14 +220,6 @@ export function HeroRat() {
   );
 }
 
-const stops = [
-  ["street-level", "Street level"],
-  ["explore", "Sightings"],
-  ["deeper", "Below ground"],
-  ["field-notes", "Field notes"],
-  ["city-corner", "Local stop"],
-  ["methodology", "Field guide"],
-];
 export function SubwayNav() {
   const [active, setActive] = useState(0);
   const { express } = useCityPlay();
@@ -237,7 +230,7 @@ export function SubwayNav() {
       frame = requestAnimationFrame(() => {
         let next = 0;
         const marker = Math.min(window.innerHeight / 2, 500);
-        stops.forEach(([id], index) => {
+        STOPS.forEach(({ id }, index) => {
           if (
             document.getElementById(id)?.getBoundingClientRect().top <= marker
           )
@@ -273,22 +266,36 @@ export function SubwayNav() {
           <span
             className={`local-train ${express ? "express-run" : ""}`}
             key={express}
-            style={{ left: `${((active + 0.5) / stops.length) * 100}%` }}
+            style={{ left: `${((active + 0.5) / STOPS.length) * 100}%` }}
             aria-hidden="true"
           >
             <i />
             <i />
             <i />
           </span>
-          {stops.map(([id, label], index) => (
-            <a
-              href={`#${id}`}
-              key={id}
-              aria-current={active === index ? "location" : undefined}
-            >
-              <span className="station-dot" aria-hidden="true" />
-              {label}
-            </a>
+          {STOPS.map((stop, index) => (
+            <div className="local-stop" key={stop.id}>
+              <a
+                href={`#${stop.id}`}
+                aria-current={active === index ? "location" : undefined}
+              >
+                <span className="station-dot">
+                  <LineBullet id={stop.id} size="xs" />
+                </span>
+                {stop.label}
+              </a>
+              {stop.transfers?.length > 1 && (
+                <span className="local-transfers">
+                  {stop.transfers.map((t) => (
+                    <TransferLink
+                      key={t.label}
+                      transfer={t}
+                      aria-label={`${stop.label}: ${t.label}`}
+                    />
+                  ))}
+                </span>
+              )}
+            </div>
           ))}
         </nav>
         <MotionSwitch />
@@ -366,21 +373,20 @@ export function CityCorner({ data, details }) {
       id="city-corner"
       aria-labelledby="city-title"
     >
-      <div className="section-heading">
-        <div>
-          <div className="eyebrow">NEXT STOP / A LITTLE LOCAL COLOR</div>
-          <h2 id="city-title">Only in New York.</h2>
-          <p>
-            Big city. Tiny neighbors. Take a fact, find a secret, enjoy the
-            ride.
-          </p>
-        </div>
-        <span className="local-sign mono">
-          NO FARE.
-          <br />
-          PLENTY OF CHARACTER.
-        </span>
-      </div>
+      <StationSign
+        line="city-corner"
+        eyebrow="NEXT STOP / A LITTLE LOCAL COLOR"
+        title="Only in New York."
+        titleId="city-title"
+        intro="Big city. Tiny neighbors. Take a fact, find a secret, enjoy the ride."
+        aside={
+          <span className="local-sign mono">
+            NO FARE.
+            <br />
+            PLENTY OF CHARACTER.
+          </span>
+        }
+      />
       <div className="city-play-grid">
         <article className="fact-ticket" aria-label="Citywide fact ticket">
           <div className="ticket-top mono">

@@ -15,6 +15,7 @@ import { easeInOutCubic } from "../lib/motion.mjs";
 import { useCityPlay } from "./CityPlay.jsx";
 import { useInView, useTween } from "./Motion.jsx";
 import Rat from "./Rat.jsx";
+import { BoroughBullet } from "./Wayfinding.jsx";
 
 const W = 720,
   H = 555;
@@ -139,6 +140,7 @@ export default function AtlasMap({
   const [run, setRun] = useState(null);
   const [arrived, setArrived] = useState(null);
   const [jumps, setJumps] = useState([]);
+  const [subway, setSubway] = useState({ on: false, data: null, error: false });
   const svgRef = useRef(null),
     zoomRef = useRef(null),
     canvasRef = useRef(null),
@@ -345,6 +347,39 @@ export default function AtlasMap({
     lastFrame.current = { frame, counts };
   }, [frame, counts]);
 
+  // The subway layer is optional, so its geometry loads on first use.
+  useEffect(() => {
+    if (!subway.on || subway.data) return;
+    const controller = new AbortController();
+    fetch(`${import.meta.env.BASE_URL}geo/subway.geojson`, {
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("Subway layer unavailable");
+        return response.json();
+      })
+      .then((data) =>
+        setSubway((value) => ({ ...value, data, error: false })),
+      )
+      .catch((error) => {
+        if (error.name !== "AbortError")
+          setSubway((value) => ({ ...value, error: true }));
+      });
+    return () => controller.abort();
+  }, [subway.on, subway.data]);
+  const subwayShapes = useMemo(() => {
+    if (!subway.data) return null;
+    const lines = subway.data.features.find(
+      (f) => f.properties.kind === "lines",
+    );
+    return {
+      d: path(lines),
+      stations: subway.data.features
+        .filter((f) => f.properties.kind === "station")
+        .map((f) => projection(f.geometry.coordinates)),
+    };
+  }, [subway.data, path, projection]);
+
   const changeZoom = (factor) =>
     select(svgRef.current).call(zoomRef.current.scaleBy, factor);
   const choose = (zip) => setSelectedZip(selectedZip === zip ? null : zip);
@@ -409,6 +444,16 @@ export default function AtlasMap({
             </button>
           ))}
         </div>
+        <button
+          className="subway-toggle"
+          aria-pressed={subway.on}
+          onClick={() => setSubway((value) => ({ ...value, on: !value.on }))}
+        >
+          <span className="subway-toggle-icon" aria-hidden="true">
+            <i />
+          </span>
+          Subway lines
+        </button>
         <span className="mono map-hint">Drag to explore · select a ZIP</span>
       </div>
       <p className="map-counts mono" data-testid="map-counts">
@@ -547,6 +592,32 @@ export default function AtlasMap({
                 </g>
               )}
             </g>
+            {subway.on && subwayShapes && (
+              <g className="subway-layer" aria-hidden="true">
+                <path
+                  d={subwayShapes.d}
+                  pathLength="1"
+                  className="subway-casing"
+                />
+                <path
+                  d={subwayShapes.d}
+                  pathLength="1"
+                  className="subway-line"
+                />
+                {/* Stations appear once zoomed in; city-wide they crowd the lines. */}
+                {transform.k >= 1.8 &&
+                  subwayShapes.stations.map(([x, y], i) => (
+                  <circle
+                    key={i}
+                    cx={x}
+                    cy={y}
+                    r={1.8 / scale}
+                    strokeWidth={0.9 / scale}
+                    className="subway-station"
+                  />
+                  ))}
+              </g>
+            )}
             {placeJumps(jumps, points, ringRadius, scale).map((j) => {
               const { p, r } = j;
               return (
@@ -654,7 +725,8 @@ export default function AtlasMap({
             aria-hidden="true"
             data-testid="map-hover-card"
           >
-            <span className="eyebrow">
+            <span className="eyebrow hover-eyebrow">
+              <BoroughBullet borough={hoverRow.borough} size="xs" />
               ZIP {hoverRow.zip} · {hoverRow.borough}
             </span>
             <strong>{hoverRow.info?.PO_NAME || hoverRow.borough}</strong>
@@ -728,7 +800,10 @@ export default function AtlasMap({
             >
               ×
             </button>
-            <span className="eyebrow">ZIP {selected.zip}</span>
+            <span className="eyebrow detail-eyebrow">
+              <BoroughBullet borough={selected.borough} size="xs" />
+              ZIP {selected.zip}
+            </span>
             <strong>{selected.info?.PO_NAME || selected.borough}</strong>
             <span>
               <b>{number.format(selected.count)}</b>{" "}
@@ -774,6 +849,10 @@ export default function AtlasMap({
           {jumps.length
             ? " · rings mark the biggest rises since the last year shown"
             : ""}
+          {subway.on &&
+            (subway.error
+              ? " · the subway layer couldn’t load"
+              : " · subway lines are for orientation; nearness to a line doesn’t explain a ZIP’s reports")}
         </span>
       </div>
     </>

@@ -37,6 +37,7 @@ npm run test:e2e    # desktop and mobile interactions, recovery, accessibility
 npm run preview    # serve the production build
 npm run data:refresh
 npm run data:audit   # independently verify counts against NYC APIs
+npm run geo:subway   # rebuild the optional subway layer from MTA open data
 ```
 
 `BASE_PATH` overrides the default `/nyc_rats/` build prefix. Set it to `/` for a root-domain deployment. The optional `SOCRATA_APP_TOKEN` shell environment variable gives data refreshes a dedicated API request pool. No token is required to run the site. `.env.example` documents the setting; the Node script reads the process environment, so export the variable before running it.
@@ -55,6 +56,8 @@ Both are filtered to `complaint_type = 'Rodent' AND descriptor = 'Rat Sighting'`
 `public/data/sightings.json` is a small, versioned snapshot. Its rows are `[YYYY-MM, boroughIndex, ZIP, reportCount]`; the borough order, coverage, source totals, source update times, and refresh timestamp are included in the file. Records with missing or invalid ZIPs and unspecified boroughs remain in totals. Only ZIPs that match the local geography can appear on the map. Bubble positions are ZIP reference points, not individual sighting coordinates. Counts are not normalized for population or area.
 
 ZIP boundaries come from the original project's `resources/nyc_zip_bounderies.geojson`. Borough geography was converted from the original project's WGS84 shapefile in `resources/Borough Boundaries/`. These historical boundaries are preserved in `public/geo/`, rather than silently implying current boundaries. D3 rendering normalizes ring winding without mutating the source files.
+
+The optional subway layer (`public/geo/subway.geojson`) is built by `scripts/refresh-subway.mjs` from the MTA's [Subway Service Lines](https://data.ny.gov/d/s692-irgq) and [Subway Stations](https://data.ny.gov/d/39hk-dx4f) on Open NY. Service lines are merged into one simplified network (about 8 m tolerance; duplicate trunk runs kept once) and stations are reduced to one point per complex. The network changes rarely, so the file is rebuilt by hand rather than in the daily refresh. It loads only when the layer is switched on, is drawn without route colors or letters, and is for orientation only. The atlas's bullets, lines, and signage are its own borough and section styling, not MTA wayfinding, and the project is not affiliated with the MTA.
 
 The current month is partial and clearly marked. Monthly averages exclude the latest provisional month and include zero-report complete months. A selection containing only the provisional month has no complete-month average. Peak-month cards follow the selected period and borough; a separate citywide record always uses the full historical series. Tied peak months are identified. Future months have no coverage, rather than being presented as zero-report months. The heatmap shows all available years for the selected borough, outlines the selected period, and lets a visitor select an individual month.
 

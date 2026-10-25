@@ -21,6 +21,7 @@ import {
 import Rat from "./Rat.jsx";
 import { useCityPlay } from "./CityPlay.jsx";
 import { Odometer, useInView, useTween } from "./Motion.jsx";
+import { BoroughBullet } from "./Wayfinding.jsx";
 
 // Points a callout at the busiest month in view, and at the citywide record
 // when it falls inside the period.
@@ -351,6 +352,7 @@ export function RatRace({ counts, borough, setBorough }) {
               <span className="rank mono" aria-hidden="true">
                 0{i + 1}
               </span>
+              <BoroughBullet borough={r.name} size="sm" />
               <strong>{r.name}</strong>
               <span className="mono">
                 <Odometer value={r.count} />

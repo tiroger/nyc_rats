@@ -781,7 +781,7 @@ h3 {
   color: #5c6a50;
   min-width: 17px;
 }
-.zip-ranking button > span:nth-child(2) {
+.zip-ranking button > span:nth-child(3) {
   display: flex;
   flex-direction: column;
   gap: 5px;

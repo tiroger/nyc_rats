@@ -5,6 +5,11 @@ import Insights from "./components/Insights.jsx";
 import HotspotPlayer from "./components/HotspotPlayer.jsx";
 import { FlipText, Odometer, PizzaConfetti } from "./components/Motion.jsx";
 import {
+  BoroughBullet,
+  CountdownBoard,
+  StationSign,
+} from "./components/Wayfinding.jsx";
+import {
   CityCorner,
   HeroRat,
   SubwayNav,
@@ -445,17 +450,7 @@ export default function App() {
             </span>
           </div>
         </section>
-        <div className="ticker">
-          <div className="shell ticker-inner">
-            <span>
-              <span className={`live-dot ${stale ? "stale" : ""}`} />{" "}
-              {stale ? "LAST PUBLISHED SNAPSHOT" : "REFRESHED DAILY"}
-            </span>
-            <span>NYC 311 · Rat-sighting reports</span>
-            <span>Data through {dateLabel(data.coverage.to)}</span>
-            <a href="#methodology">Know what you’re counting ↗</a>
-          </div>
-        </div>
+        <CountdownBoard stale={stale} through={dateLabel(data.coverage.to)} />
         <SubwayNav />
         {stale && (
           <div className="stale-notice shell" role="status">
@@ -469,19 +464,18 @@ export default function App() {
           className="explore shell"
           aria-labelledby="explore-title"
         >
-          <div className="section-heading">
-            <div>
-              <div className="eyebrow">01 / ON THE GROUND</div>
-              <h2 id="explore-title">Where the wild things are.</h2>
-              <p>
-                Every report leaves a little trail. Pick a borough and a time to
-                follow it.
-              </p>
-            </div>
-            <button className="text-button share-button" onClick={share}>
-              {copied ? "Link copied ✓" : "Share this view ↗"}
-            </button>
-          </div>
+          <StationSign
+            line="explore"
+            eyebrow="01 / ON THE GROUND"
+            title="Where the wild things are."
+            titleId="explore-title"
+            intro="Every report leaves a little trail. Pick a borough and a time to follow it."
+            aside={
+              <button className="text-button share-button" onClick={share}>
+                {copied ? "Link copied ✓" : "Share this view ↗"}
+              </button>
+            }
+          />
           <div className="filter-bar">
             <div
               className="borough-filters"
@@ -494,12 +488,10 @@ export default function App() {
                   aria-pressed={borough === b}
                   onClick={() => setBorough(b)}
                 >
-                  {b !== "All NYC" && (
-                    <span
-                      className="borough-dot"
-                      style={{ background: COLORS[b] }}
-                    />
-                  )}
+                  <BoroughBullet
+                    borough={b}
+                    out={borough !== "All NYC" && borough !== b}
+                  />
                   {b}
                 </button>
               ))}
@@ -735,7 +727,12 @@ export default function App() {
                 Big reputations.
               </h3>
               <p>Mapped ZIP codes ranked by {mapUnit} in your selection.</p>
-              <ol className="zip-ranking">
+              <ol
+                className="zip-ranking"
+                style={{
+                  "--strip": borough === "All NYC" ? undefined : COLORS[borough],
+                }}
+              >
                 {(mapSummary?.zips || [])
                   .filter((r) =>
                     resource.geography.zips.features.some(
@@ -751,17 +748,20 @@ export default function App() {
                         }
                         aria-pressed={selectedZip === r.zip}
                       >
+                        <span className="strip-stop" aria-hidden="true" />
                         <span className="zip-rank mono">
                           {String(i + 1).padStart(2, "0")}
                         </span>
                         <span>
                           <strong>{r.zip}</strong>
                           <small>
-                            <span
-                              className="borough-dot"
-                              style={{ background: COLORS[r.borough] }}
-                            />
+                            <BoroughBullet borough={r.borough} size="xs" />
                             {r.borough}
+                            {selectedZip === r.zip && (
+                              <em className="you-are-here mono">
+                                YOU ARE HERE
+                              </em>
+                            )}
                           </small>
                         </span>
                         <b className="mono">{number.format(r.count)}</b>
@@ -788,7 +788,7 @@ export default function App() {
             </aside>
           </div>
           <div className="chart-layout">
-            <article className="panel trend-panel">
+            <article className="panel trend-panel" id="trend">
               <div className="panel-heading">
                 <div>
                   <span className="eyebrow">THE LONG TAIL</span>
@@ -809,7 +809,7 @@ export default function App() {
                   `The last month is incomplete through ${dateLabel(data.coverage.to)}.`}
               </p>
             </article>
-            <article className="panel race-panel">
+            <article className="panel race-panel" id="race">
               <div className="panel-heading">
                 <div>
                   <span className="eyebrow">THE RAT RACE</span>
@@ -847,21 +847,20 @@ export default function App() {
           id="field-notes"
           aria-labelledby="notes-title"
         >
-          <div className="section-heading">
-            <div>
-              <div className="eyebrow">03 / THE BIGGER PICTURE</div>
-              <h2 id="notes-title">Creatures of habit.</h2>
-              <p>
-                Step back. Look across the years. See when the city starts
-                squeaking.
-              </p>
-            </div>
-            <span className="mono small-label">
-              {borough.toUpperCase()} / ALL AVAILABLE YEARS
-            </span>
-          </div>
+          <StationSign
+            line="field-notes"
+            eyebrow="03 / THE BIGGER PICTURE"
+            title="Creatures of habit."
+            titleId="notes-title"
+            intro="Step back. Look across the years. See when the city starts squeaking."
+            aside={
+              <span className="mono small-label">
+                {borough.toUpperCase()} / ALL AVAILABLE YEARS
+              </span>
+            }
+          />
           <div className="season-layout">
-            <article className="panel season-panel">
+            <article className="panel season-panel" id="season">
               <div className="panel-heading">
                 <div>
                   <span className="eyebrow">RAT SEASON</span>
@@ -914,18 +913,24 @@ export default function App() {
           id="methodology"
           aria-labelledby="method-title"
         >
-          <div>
-            <div className="eyebrow">04 / UNDER THE HOOD</div>
-            <h2 id="method-title">
-              Good data.
-              <br />A little street sense.
-            </h2>
-            <p>
-              An independent project built on public information.
-              <br />
-              Open source, open data, eyes wide open.
-            </p>
-          </div>
+          <StationSign
+            line="methodology"
+            eyebrow="04 / UNDER THE HOOD"
+            title={
+              <>
+                Good data.
+                <br />A little street sense.
+              </>
+            }
+            titleId="method-title"
+            intro={
+              <>
+                An independent project built on public information.
+                <br />
+                Open source, open data, eyes wide open.
+              </>
+            }
+          />
           <div className="method-details">
             <details open>
               <summary>What are we actually counting?</summary>
@@ -954,7 +959,14 @@ export default function App() {
                 date, type, tax lot, result, borough, and ZIP; distinct records
                 are not necessarily distinct visits or properties. The map uses
                 historical ZIP and borough boundaries preserved in this project;
-                boundaries and ZIP assignments may change.
+                boundaries and ZIP assignments may change. The optional subway
+                layer is simplified from the MTA’s{" "}
+                <a href="https://data.ny.gov/d/s692-irgq">
+                  Subway Service Lines ↗
+                </a>{" "}
+                and <a href="https://data.ny.gov/d/39hk-dx4f">Subway Stations ↗</a>{" "}
+                on Open NY. It is there for orientation only; this atlas is not
+                affiliated with the MTA.
               </p>
             </details>
             <details>

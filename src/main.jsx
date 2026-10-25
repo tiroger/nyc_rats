@@ -12,6 +12,7 @@ import "./style.css";
 import "./insights.css";
 import "./city-play.css";
 import "./motion.css";
+import "./wayfinding.css";
 
 class ErrorBoundary extends React.Component {
   state = { failed: false };

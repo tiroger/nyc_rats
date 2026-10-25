@@ -13,6 +13,7 @@
     "data:refresh": "node scripts/refresh-data.mjs && node scripts/refresh-details.mjs",
     "data:audit": "node scripts/audit-data.mjs && node scripts/audit-details.mjs",
     "data:validate": "node scripts/validate-data.mjs",
+    "geo:subway": "node scripts/refresh-subway.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:e2e": "playwright test",
     "check": "npm run test && npm run data:validate && npm run build"

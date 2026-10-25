@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { hierarchy, pack, scaleLinear } from "d3";
 import { COLORS, monthLabel, number } from "../lib/data.mjs";
 import {
@@ -11,6 +11,7 @@ import {
 } from "../lib/details.mjs";
 import Rat from "./Rat.jsx";
 import { Trend } from "./Charts.jsx";
+import { StationSign } from "./Wayfinding.jsx";
 
 const dateLabel = (date) =>
   new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
@@ -527,6 +528,12 @@ export default function Insights({
     else url.searchParams.set("view", id);
     window.history.replaceState(null, "", url);
   }
+  // Transfers from the Rat Local and the station sign switch tabs.
+  useEffect(() => {
+    const onTransfer = (event) => selectTab(event.detail);
+    window.addEventListener("ratlas:tab", onTransfer);
+    return () => window.removeEventListener("ratlas:tab", onTransfer);
+  }, []);
   function moveTab(e, index) {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
     e.preventDefault();
@@ -545,19 +552,18 @@ export default function Insights({
       id="deeper"
       aria-labelledby="insight-title"
     >
-      <div className="section-heading">
-        <div>
-          <div className="eyebrow">02 / BELOW THE SIDEWALK</div>
-          <h2 id="insight-title">There’s more to the story.</h2>
-          <p>
-            Where reports happen. How often places reappear. What inspectors
-            find.
-          </p>
-        </div>
-        <span className="mono small-label">
-          LINKED TO YOUR DATES AND BOROUGH
-        </span>
-      </div>
+      <StationSign
+        line="deeper"
+        eyebrow="02 / BELOW THE SIDEWALK"
+        title="There’s more to the story."
+        titleId="insight-title"
+        intro="Where reports happen. How often places reappear. What inspectors find."
+        aside={
+          <span className="mono small-label">
+            LINKED TO YOUR DATES AND BOROUGH
+          </span>
+        }
+      />
       <div
         className="insight-tabs"
         role="tablist"
