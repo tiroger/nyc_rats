@@ -27,6 +27,7 @@ const stamps = {
   pizza: "Pizza patron",
   sewer: "Sewer socialite",
   express: "Secret express",
+  night: "Night-shift regular",
 };
 function readStored(key, fallback) {
   try {
@@ -35,6 +36,7 @@ function readStored(key, fallback) {
     return fallback;
   }
 }
+const STAMP_COUNT = Object.keys(stamps).length;
 export const useCityPlay = () => useContext(CityContext);
 
 export function CityProvider({ children }) {
@@ -64,6 +66,8 @@ export function CityProvider({ children }) {
         sewer: "Sewer socialite! Welcome to the club. Mind the tiny feet.",
         express:
           "Secret express! The Rat Local is making an unscheduled joyride.",
+        night:
+          "Night-shift regular! The map just clocked in after dark. The locals glow.",
       }[key],
     });
     if (key === "express") setExpress((previous) => previous + 1);
@@ -496,14 +500,14 @@ export function CityCorner({ data, details }) {
         <div>
           <span className="eyebrow">YOUR SOUVENIR / SAVED ON THIS DEVICE</span>
           <h3>
-            {found.length === 3
+            {found.length === STAMP_COUNT
               ? "Honorary Rat Local rider."
               : "A few secrets between stops."}
           </h3>
           <p>
-            {found.length === 3
-              ? "Three stamps. Unlimited curiosity. Welcome aboard."
-              : `${found.length} of 3 stamps collected. The atlas has a playful side.`}
+            {found.length === STAMP_COUNT
+              ? "Four stamps. Unlimited curiosity. Welcome aboard."
+              : `${found.length} of ${STAMP_COUNT} stamps collected. The atlas has a playful side.`}
           </p>
         </div>
         <ul aria-label="Collected stamps">
@@ -520,7 +524,8 @@ export function CityCorner({ data, details }) {
         <details>
           <summary>Need a clue?</summary>
           <p>
-            A skyline local is hungry. A round cover has a secret. And typing{" "}
+            A skyline local is hungry. A round cover has a secret. The map’s
+            compass knows the way to the night shift. And typing{" "}
             <kbd>R</kbd> <kbd>A</kbd> <kbd>T</kbd> outside a form control calls
             the express.
           </p>

@@ -11,6 +11,7 @@ import { CityProvider } from "./components/CityPlay.jsx";
 import "./style.css";
 import "./insights.css";
 import "./city-play.css";
+import "./motion.css";
 
 class ErrorBoundary extends React.Component {
   state = { failed: false };

@@ -55,6 +55,12 @@ test("NYC secrets work with the keyboard, persist, and remain accessible", async
     page.getByRole("button", { name: /Close the manhole/ }),
   ).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByText("SEWER SOCIAL CLUB")).toBeVisible();
+  const compass = page.getByRole("button", { name: "Night-shift map" });
+  await compass.click();
+  await expect(compass).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("list", { name: "Collected stamps" }),
+  ).toContainText("Night-shift regular: collected");
   if (isMobile) {
     await page.getByText("Need a clue?", { exact: true }).click();
     await page.getByRole("button", { name: /Call the secret express/ }).click();
