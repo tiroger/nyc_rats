@@ -95,16 +95,56 @@ export function LineBullet({ id, size = "md" }) {
   );
 }
 
+// Scroll to a section and keep it in view while the page is still settling.
+// Late data (the detail snapshot) can grow the sections above the target
+// mid-scroll; the browser's own anchor scroll would then stop short. Course
+// corrections stop as soon as the target sits at the top, or the visitor
+// scrolls on their own.
+export function jumpTo(event, id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  event.preventDefault();
+  window.history.pushState(null, "", `#${id}`);
+  const behavior = document.documentElement.dataset.motion === "off" ? "instant" : "smooth";
+  target.scrollIntoView({ behavior });
+  const padding = () =>
+    parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+  let lastTop = null,
+    settled = 0,
+    timer;
+  const stop = () => {
+    clearTimeout(timer);
+    ["wheel", "touchstart", "keydown"].forEach((type) =>
+      window.removeEventListener(type, stop),
+    );
+  };
+  ["wheel", "touchstart", "keydown"].forEach((type) =>
+    window.addEventListener(type, stop, { passive: true, once: true }),
+  );
+  const deadline = performance.now() + 4000;
+  const check = () => {
+    const top = target.getBoundingClientRect().top;
+    const atRest = lastTop !== null && Math.abs(top - lastTop) < 1;
+    lastTop = top;
+    if (Math.abs(top - padding()) <= 4) settled += 1;
+    else if (atRest) target.scrollIntoView({ behavior });
+    if (settled >= 2 || performance.now() > deadline) return stop();
+    timer = setTimeout(check, 200);
+  };
+  timer = setTimeout(check, 200);
+}
+
 // Below-ground transfers also switch the tab they lead to.
 export function TransferLink({ transfer, ...props }) {
   return (
     <a
       href={`#${transfer.href}`}
-      onClick={() => {
+      onClick={(event) => {
         if (transfer.tab)
           window.dispatchEvent(
             new CustomEvent("ratlas:tab", { detail: transfer.tab }),
           );
+        jumpTo(event, transfer.href);
       }}
       {...props}
     >

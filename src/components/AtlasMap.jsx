@@ -476,13 +476,11 @@ export default function AtlasMap({
             >
               <circle cx="1" cy="1" r=".65" className="water-dot" />
             </pattern>
-            <filter id="night-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+            <radialGradient id="night-bubble">
+              <stop offset="0" stopColor="#f4ffc4" />
+              <stop offset="0.55" stopColor="#dcf080" />
+              <stop offset="1" stopColor="#dcf080" stopOpacity="0.15" />
+            </radialGradient>
           </defs>
           <rect width={W} height={H} fill="url(#water)" />
           {frame !== null && (
@@ -570,10 +568,6 @@ export default function AtlasMap({
                         r={r}
                         fill={COLORS[row.borough]}
                         className={`report-bubble ${selectedZip === row.zip ? "bubble-selected" : ""}`}
-                        style={{
-                          "--breathe": `${2.2 + (r * scale) / 10}s`,
-                          "--breathe-delay": `${-(Number(row.zip) % 17) / 5}s`,
-                        }}
                         role="button"
                         tabIndex={0}
                         onClick={() => choose(row.zip)}
