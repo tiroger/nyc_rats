@@ -34,9 +34,10 @@ def _():
 
     import capture_recapture as cr
     import sources
+    import sweeps as sw
 
     _ = alt.data_transformers.disable_max_rows()
-    return alt, cr, mo, np, pd, sources
+    return alt, cr, mo, np, pd, sources, sw
 
 
 @app.cell(hide_code=True)
@@ -192,10 +193,19 @@ def _(refresh, sources):
         treated_2010_h2 = sources.treatments("2010-07-01", "2011-01-01", refresh=refresh.value)
         rodent_2010_h1 = sources.rodent_complaints("2010-01-01", "2010-07-01", refresh=refresh.value)
         rodent_2011_h1 = sources.rodent_complaints("2011-01-01", "2011-07-01", refresh=refresh.value)
+        # Record-level inspections and complaints for finding proactive sweeps (§6).
+        insp_records_2010 = sources.inspection_records("2010-01-01", "2012-01-01", refresh=refresh.value)
+        insp_records_2023 = sources.inspection_records("2023-01-01", "2025-01-01", refresh=refresh.value)
+        complaints_2010 = sources.rodent_complaint_records("2009-10-01", "2012-01-01", refresh=refresh.value)
+        complaints_2023 = sources.rodent_complaint_records("2022-10-01", "2025-01-01", refresh=refresh.value)
     return (
+        complaints_2010,
+        complaints_2023,
         insp_2010_h1,
         insp_2010_h2,
         insp_2011_h1,
+        insp_records_2010,
+        insp_records_2023,
         pluto_lots,
         rodent_2010_h1,
         rodent_2011_h1,
@@ -1022,7 +1032,7 @@ def _(mo, multi, multi_best, occasion_design, repro):
                     if multi_best.model in ("Mh", "Mth")
                     else ""
                 )
-                + "**But AIC cannot see turnover:** the simulation study (section 6) "
+                + "**But AIC cannot see turnover:** the simulation study (section 7) "
                 "shows Mth overshooting badly when lots change status between "
                 "occasions, and A1 says they do. "
                 + f"Chao's heterogeneity lower bound is {_chao.n:,.0f}. For comparison, "
@@ -1167,12 +1177,12 @@ def _(mo, two_source):
                 f"reported to 311, {two_source['n2']:,} lots with rat signs found, "
                 f"{two_source['m']:,} in both → **{two_source['chapman']:,.0f}** infested "
                 f"lots (95% CI {two_source['low']:,.0f}–{two_source['high']:,.0f}).\n\n"
-                "**Caveat: the sources are not independent.** Many inspections are "
-                "*triggered* by 311 complaints, which forces overlap and biases this "
-                "estimate **low**. Proactive inspections (the rat-indexing programme) "
-                "would be the clean second source, but the public data does not say "
-                "which inspections were proactive. Treat this as a lower-bound "
-                "cross-check."
+                "**Caveat: inspections don't cover the whole city.** Section 6 shows "
+                "most initial inspections are *proactive* sweeps (only about one in "
+                "eight follows a 311 complaint on the lot), but sweeps happen in a "
+                "few targeted neighbourhoods. Lots elsewhere can only be 'caught' by "
+                "311, which is extreme heterogeneity and biases this estimate **low**. "
+                "Section 6 uses the sweeps properly, as a field survey."
             ),
         ]
     )
@@ -1185,9 +1195,19 @@ def _(mo):
     ### 5.6 · From infested lots to rats
 
     Everything above estimates **infested lots**. Turning that into rats needs two
-    numbers the data cannot supply: **how many colonies** those lots hold, and
+    numbers 311 data cannot supply: **how many colonies** those lots hold, and
     **how big a colony is**. Rather than fixing them, set ranges and propagate them
-    with Monte Carlo. The defaults reproduce Auerbach's assumptions.
+    with Monte Carlo.
+
+    *Lots per colony* now defaults to **3–7**, from field evidence rather than
+    Auerbach's 1: Norway rat home ranges in Baltimore were 30–45 m across
+    (Davis et al. 1948, via Byers et al. 2019), which is 700–1,600 m², while the
+    median NYC tax lot is about 234 m² (PLUTO), so one home range spans about 3–7
+    lots. NYC genetics agree on the scale: rats within ~200 m are close kin
+    (Combs et al. 2018). *Rats per colony* stays at Auerbach's 40–50, which has no
+    traceable field source; NYC Health's own guidance is 1–12 rats per active
+    burrow, and a colony can hold several burrows. Set lots per colony to 1–1 to
+    reproduce Auerbach.
     """)
     return
 
@@ -1210,7 +1230,7 @@ def _(mo, multi_best, open_model, repro, strat_both, two_source):
     )
     colony_size = mo.ui.range_slider(5, 100, value=[40, 50], step=5, label="Rats per colony", show_value=True)
     lots_per_colony = mo.ui.range_slider(
-        1.0, 6.0, value=[1.0, 1.0], step=0.1, label="Infested lots per colony", show_value=True
+        1.0, 8.0, value=[3.0, 7.0], step=0.5, label="Infested lots per colony", show_value=True
     )
     mo.vstack([estimate_choice, colony_size, lots_per_colony])
     return colony_size, estimate_choice, lots_per_colony
@@ -1312,7 +1332,490 @@ def _(alt, mo, trend):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## 6. Which estimator should we trust? A simulation study
+    ## 6. Closing the gap: the city's own inspection sweeps
+
+    Capture-recapture has to *assume* how often an infested lot gets reported.
+    The Health Department's proactive **rat indexing** lets us *measure* it:
+    inspectors walk targeted neighbourhoods block by block and inspect every
+    property, whether or not anyone complained (CDC 2012). The public data has
+    no flag for these visits, so sweeps are inferred from behaviour:
+
+    - at least **5 lots** on one tax block inspected on the same day,
+    - at most **20%** of them preceded by a 311 rodent complaint on that lot in the
+      previous 60 days,
+    - covering at least **70%** of the block's lots (PLUTO).
+
+    The first such sweep of each block is used. Inside a sweep we know which lots
+    and blocks had active rat signs, so sweeps act as a field survey: the design
+    Baltimore used in 1949 and 2004 (stratify blocks, survey a sample, scale up;
+    Davis & Fales 1950; Easterbrook et al. 2005), with the city's inspectors as
+    the field team. Two periods are analysed: **2010–11**, the reproduction
+    window (indexing ran in the Bronx and, from 2010, Manhattan), and **2023–24**,
+    the latest complete years (the rat mitigation zones).
+    """)
+    return
+
+
+@app.cell
+def _(pd, pluto_lots):
+    _lots = pluto_lots.dropna(subset=["bbl"]).assign(block=lambda d: d.bbl.str[:6])
+    block_frame = _lots.groupby("block").agg(lots=("bbl", "nunique"), units=("unitsres", "sum"))
+    block_frame["density"] = pd.cut(
+        block_frame.units / block_frame.lots,
+        [-1, 2, 10, float("inf")],
+        labels=["≤2 homes per lot", "2–10 homes per lot", ">10 homes per lot"],
+    )
+    return (block_frame,)
+
+
+@app.cell
+def _(
+    block_frame,
+    complaints_2010,
+    complaints_2023,
+    cr,
+    insp_records_2010,
+    insp_records_2023,
+    lots_in,
+    pd,
+    reports,
+    sw,
+):
+    _rat_reports = reports.assign(block=lambda d: d.bbl.str[:6])
+    _periods = {
+        "2010–11": (insp_records_2010, complaints_2010, "2010-01-01", "2012-01-01", ("2010-H1", "2011-H1")),
+        "2023–24": (insp_records_2023, complaints_2023, "2023-01-01", "2025-01-01", ("2023-H1", "2024-H1")),
+    }
+    sweep_results = {}
+    for _name, (_ins, _complaints, _start, _end, _pair) in _periods.items():
+        _ins = _ins.dropna(subset=["bbl"]).copy()
+        _ins["triggered"] = sw.mark_triggered(_ins, _complaints.dropna(subset=["bbl"]))
+        _sweeps = sw.find_sweeps(_ins, block_frame.lots)
+        _ins["block"] = _ins.bbl.str[:6]
+        _nta = _ins.groupby("block").nta.agg(lambda x: x.mode().iat[0] if x.notna().any() else "unknown")
+        _sweeps["nta"] = _sweeps.block.map(_nta)
+        _sweeps["infested"] = _sweeps.rat_lots > 0
+        # Inspectors reach most but not all of a block's lots in a sweep; assume
+        # the lots they missed look like the ones they saw.
+        _sweeps["rat_lots_block"] = _sweeps.rat_lots / _sweeps.coverage.clip(upper=1)
+        _sweeps["reported"] = sw.reported_near(_sweeps, _rat_reports, "block")
+        # Lot level: every lot inspected on its block's sweep day.
+        _day = _ins.inspection_date.dt.normalize()
+        _keys = set(zip(_sweeps.block, _sweeps.day))
+        _lots = (
+            _ins[[k in _keys for k in zip(_ins.block, _day)]]
+            .assign(day=lambda d: d.inspection_date.dt.normalize())
+            .sort_values("rat_activity", ascending=False)
+            .drop_duplicates("bbl")
+            .reset_index(drop=True)
+        )
+        _lots["reported"] = sw.reported_near(_lots, _rat_reports, "bbl")
+        _found = _lots[_lots.rat_activity]
+        # Strata: how intensely each block reports to 311 over the period, and housing density.
+        _period = _rat_reports[(_rat_reports.created_date >= _start) & (_rat_reports.created_date < _end)]
+        _frame = block_frame.copy()
+        _frame["intensity"] = pd.cut(
+            _period.groupby("block").bbl.nunique().reindex(_frame.index).fillna(0) / _frame.lots,
+            [-0.01, 0, 0.05, 0.15, float("inf")],
+            labels=["no reports", "≤5% of lots", "5–15%", ">15%"],
+        )
+        _sample = _sweeps.join(_frame[["intensity", "density"]], on="block")
+        _blocks_est = sw.stratified_total(_sample, _frame, ["intensity", "density"], "infested", "nta", reps=200)
+        _lots_est = sw.stratified_total(_sample, _frame, ["intensity", "density"], "rat_lots_block", "nta", reps=200)
+        _block_rates = sw.two_source_rates(_sweeps.infested, _sweeps.reported)
+        _halves = _period.assign(
+            h=_period.created_date.dt.year.astype(str) + (_period.created_date.dt.month > 6).astype(str)
+        ).groupby("h").block.nunique()
+        sweep_results[_name] = {
+            "sweeps": _sweeps,
+            "sample": _sample,
+            "frame": _frame,
+            "all_triggered": float(_ins.triggered.mean()),
+            "inspections": int(len(_ins)),
+            "swept_lot_inspections": int(_sweeps.lots.sum()),
+            "lot_rates": sw.two_source_rates(_lots.rat_activity, _lots.reported),
+            "block_rates": _block_rates,
+            "blocks_est": _blocks_est,
+            "lots_est": _lots_est,
+            "reported_blocks_per_half": float(_halves.mean()),
+            "detection_blocks": float(
+                _halves.mean() * _block_rates["p_found_given_reported"] / _block_rates["p_reported_given_found"]
+            ),
+            "block_chapman": cr.two_occasion(
+                set(b[:6] for b in lots_in(reports, "half", _pair[0])),
+                set(b[:6] for b in lots_in(reports, "half", _pair[1])),
+            ),
+            "rat_lots_per_infested_block": _sweeps.loc[_sweeps.infested, "rat_lots"].to_numpy(),
+            "burrow_share": float(_found.observations.fillna("").str.contains("Burrow").mean()),
+            "top_ntas": _sweeps.groupby("nta").lots.sum().sort_values(ascending=False).head(8),
+        }
+    return (sweep_results,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    sweep_period = mo.ui.dropdown(["2010–11", "2023–24"], value="2023–24", label="Period")
+    sweep_period
+    return (sweep_period,)
+
+
+@app.cell(hide_code=True)
+def _(mo, pd, sweep_period, sweep_results):
+    _r = sweep_results[sweep_period.value]
+    _s = _r["sweeps"]
+    _ntas = _r["top_ntas"].rename("lots inspected in sweeps").reset_index()
+    mo.vstack(
+        [
+            mo.md(f"### 6.1 · Do the inferred sweeps look like indexing? ({sweep_period.value})"),
+            mo.ui.table(
+                pd.DataFrame(
+                    [
+                        ["Initial inspections", f"{_r['inspections']:,}"],
+                        ["…preceded by a 311 complaint on the lot (60 days)", f"{_r['all_triggered']:.0%}"],
+                        ["Swept blocks found", f"{len(_s):,} in {_s.nta.nunique()} neighbourhoods"],
+                        ["Median share of the block's lots inspected that day", f"{_s.coverage.median():.0%}"],
+                        ["Complaint-preceded share inside sweeps", f"{_s.triggered.mean():.1%}"],
+                        ["Swept blocks with active rat signs", f"{_s.infested.mean():.0%}"],
+                    ],
+                    columns=["", "Value"],
+                ),
+                selection=None,
+            ),
+            mo.md(
+                "Most initial inspections are not complaint-driven at all, and the "
+                "inferred sweeps cover most of each block with almost no complaint "
+                "behind them: the signature of proactive indexing. The neighbourhoods "
+                "mostly match the programme's published footprint (Manhattan and the "
+                "South Bronx around 2010; the Bed-Stuy/Bushwick, Harlem, Lower Manhattan "
+                "and Grand Concourse rat mitigation zones today), an independent check "
+                "that the inference picks out the right visits. Some swept areas sit "
+                "outside those zones (other targeted sweeps, or neighbouring blocks), "
+                "which the flag requested in 6.7 would sort out."
+            ),
+            mo.ui.table(_ntas, selection=None),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, pd, sweep_period, sweep_results):
+    _r = sweep_results[sweep_period.value]
+    _lot, _blk = _r["lot_rates"], _r["block_rates"]
+    _table = pd.DataFrame(
+        [
+            ["Lot", _lot["units"], _lot["p_found_given_reported"], _lot["p_reported_given_found"], _lot["inspector_sensitivity"]],
+            ["Block", _blk["units"], _blk["p_found_given_reported"], _blk["p_reported_given_found"], _blk["inspector_sensitivity"]],
+        ],
+        columns=["Unit", "swept units", "P(rat signs | 311 report)", "P(311 report | rat signs)", "inspector sensitivity if independent"],
+    )
+    mo.vstack(
+        [
+            mo.md("### 6.2 · What does a 311 report actually mean?"),
+            mo.ui.table(
+                _table.assign(**{c: _table[c].map("{:.0%}".format) for c in _table.columns[2:]}),
+                selection=None,
+            ),
+            mo.md(
+                f"A report within three months of the sweep points to a lot with "
+                f"active signs only **{_lot['p_found_given_reported']:.0%}** of the time, "
+                f"but to a **block** with active signs **{_blk['p_found_given_reported']:.0%}** "
+                "of the time. Reports are not mostly false alarms; they are about the "
+                "right place at the scale rats live at, but often name the wrong lot "
+                "(the caller's building, not the burrow next door). That is A5 and A6 "
+                "together, and it is why the block is the better unit.\n\n"
+                f"Going the other way, only **{_blk['p_reported_given_found']:.0%}** of "
+                "infested blocks produced a 311 rat report within three months: the "
+                "detection rate capture-recapture had to guess. Treating inspectors and "
+                "311 as two independent captures suggests inspectors find about "
+                f"**{_blk['inspector_sensitivity']:.0%}** of infested blocks. Positive "
+                "dependence (bad blocks are easy for both) means true sensitivity is "
+                "probably lower, so we carry a range from that value up to 100%."
+            ),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(PUBLISHED, alt, mo, pd, repro, sweep_period, sweep_results):
+    _r = sweep_results[sweep_period.value]
+    _b, _l = _r["blocks_est"], _r["lots_est"]
+    _table = _b["table"].rename(columns={"frame_units": "blocks in city", "mean": "infested share (sweeps)", "size": "swept blocks"})
+    _rows = pd.DataFrame(
+        [
+            {"estimate": "Stratified, sweeps as the field survey", "infested blocks": _b["total"], "low": _b["low"], "high": _b["high"]},
+            {"estimate": "Detection rate (reported blocks ÷ P(report | infested))", "infested blocks": _r["detection_blocks"], "low": None, "high": None},
+            {"estimate": "311 capture-recapture on blocks (H1 vs next H1)", "infested blocks": _r["block_chapman"]["chapman"], "low": _r["block_chapman"]["low"], "high": _r["block_chapman"]["high"]},
+        ]
+    )
+    _chart = (
+        alt.Chart(_table)
+        .mark_bar()
+        .encode(
+            y=alt.Y("intensity:N", sort=None, title="311 reporting on the block"),
+            x=alt.X("infested share (sweeps):Q", axis=alt.Axis(format="%"), title="Swept blocks with active rat signs"),
+            color=alt.Color("density:N", title="Housing density"),
+            yOffset="density:N",
+            tooltip=["intensity", "density", "blocks in city", "swept blocks", alt.Tooltip("infested share (sweeps)", format=".0%")],
+        )
+        .properties(height=220, width="container")
+    )
+    _gap = _l["total"] / repro["lincoln_petersen"] - 1
+    _repro_note = (
+        f"For 2010–11 the stratified estimate of **infested lots** (inspector-found, "
+        f"scaled for lots not reached in the sweep) is **{_l['total']:,.0f}** (95% CI "
+        f"{_l['low']:,.0f}–{_l['high']:,.0f}), against Auerbach's 40,500 and our "
+        f"reproduction's {repro['lincoln_petersen']:,.0f} ({_gap:+.0%}). "
+        + (
+            "A completely different method lands close to the same number."
+            if abs(_gap) <= 0.25
+            else "The methods disagree by more than a quarter, so neither should be "
+            "read as confirming the other."
+        )
+        if sweep_period.value == "2010–11"
+        else f"Stratified **infested lots** (inspector-found): **{_l['total']:,.0f}** "
+        f"(95% CI {_l['low']:,.0f}–{_l['high']:,.0f}), "
+        f"{_l['total'] / PUBLISHED['lots_total']:.1%} of the city's lots."
+    )
+    mo.vstack(
+        [
+            mo.md("### 6.3 · Citywide infested blocks"),
+            _chart,
+            mo.md(
+                "Infestation rises steadily with how much a block reports to 311 and with "
+                "housing density, so these two traits are the strata. Each stratum's "
+                "swept share is applied to all of the city's blocks in it; uncertainty "
+                "comes from a bootstrap that resamples whole neighbourhoods."
+            ),
+            mo.ui.table(_rows.round(0), selection=None),
+            mo.md(
+                f"The three methods give **{_rows['infested blocks'].min():,.0f}–"
+                f"{_rows['infested blocks'].max():,.0f} infested blocks** out of "
+                f"{len(_r['frame']):,}. The stratified number is the upper end: swept "
+                "blocks sit in high-risk neighbourhoods, so applying their rates to, "
+                "say, quiet blocks in Staten Island likely overstates those (the "
+                f"'no reports, ≤2 homes per lot' stratum alone contributes "
+                f"{_table.iloc[0]['blocks in city'] * _table.iloc[0]['infested share (sweeps)']:,.0f}). "
+                "The detection-rate number is the lower end: it applies the swept "
+                "neighbourhoods' reporting rate everywhere, and people elsewhere report "
+                "less. 311-only capture-recapture sits between them.\n\n" + _repro_note
+            ),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, sweep_period, sweep_results):
+    _r = sweep_results[sweep_period.value]
+    _sens = round(min(max(_r["block_rates"]["inspector_sensitivity"], 0.3), 1.0), 2)
+    chain_lots_per_colony = mo.ui.range_slider(1.0, 8.0, value=[3.0, 7.0], step=0.5, label="Lots per colony territory", show_value=True)
+    chain_colony_size = mo.ui.range_slider(5, 100, value=[40, 50], step=5, label="Rats per colony", show_value=True)
+    chain_sensitivity = mo.ui.range_slider(0.3, 1.0, value=[_sens, 1.0], step=0.01, label="Inspector sensitivity (blocks)", show_value=True)
+    mo.vstack(
+        [
+            mo.md(
+                "### 6.4 · From infested blocks to rats\n\n"
+                "Infested blocks are drawn between the detection-rate and stratified "
+                "estimates (uniformly, the honest summary of 6.3), scaled up for "
+                "blocks inspectors missed, then split into colonies: a block with *k* "
+                "infested lots holds max(1, *k* ÷ lots-per-colony) colonies, using the "
+                f"sweeps' own distribution of *k*. Inspector sensitivity defaults to "
+                f"{_sens:.0%}–100% from 6.2."
+            ),
+            chain_lots_per_colony,
+            chain_colony_size,
+            chain_sensitivity,
+        ]
+    )
+    return chain_colony_size, chain_lots_per_colony, chain_sensitivity
+
+
+@app.cell
+def _(chain_colony_size, chain_lots_per_colony, chain_sensitivity, np, sweep_period, sweep_results):
+    _r = sweep_results[sweep_period.value]
+    _rng = np.random.default_rng(17)
+    _draws = 20_000
+    _lo = min(_r["detection_blocks"], _r["blocks_est"]["total"])
+    _hi = max(_r["detection_blocks"], _r["blocks_est"]["high"])
+    _blocks = _rng.uniform(_lo, _hi, _draws) / _rng.uniform(*chain_sensitivity.value, _draws)
+    _per_colony = _rng.uniform(*chain_lots_per_colony.value, _draws)
+    _k = _r["rat_lots_per_infested_block"]
+    # Mean colonies per infested block for each draw of lots-per-colony.
+    _grid = np.linspace(*chain_lots_per_colony.value, 41) if chain_lots_per_colony.value[1] > chain_lots_per_colony.value[0] else np.array([chain_lots_per_colony.value[0]])
+    _colonies_at = np.array([np.maximum(1, _k / _g).mean() for _g in _grid])
+    _colonies = np.interp(_per_colony, _grid, _colonies_at)
+    _rats = _blocks * _colonies * _rng.uniform(*chain_colony_size.value, _draws)
+    chain_interval = np.percentile(_rats, [5, 50, 95])
+    chain_colonies = np.percentile(_blocks * _colonies, [5, 50, 95])
+    return chain_colonies, chain_interval
+
+
+@app.cell(hide_code=True)
+def _(chain_colonies, chain_colony_size, chain_interval, mo, sweep_period, sweep_results):
+    _r = sweep_results[sweep_period.value]
+    _l = _r["lots_est"]["total"]
+    _burrow_lo = _l * _r["burrow_share"] * 1 * 1
+    _burrow_hi = _l * _r["burrow_share"] * 2 * 12 / min(_r["block_rates"]["inspector_sensitivity"], 1)
+    mo.vstack(
+        [
+            mo.hstack(
+                [
+                    mo.stat(f"{chain_colonies[1]:,.0f}", label="Colonies (median)", caption=f"90%: {chain_colonies[0]:,.0f}–{chain_colonies[2]:,.0f}"),
+                    mo.stat(f"{chain_interval[1] / 1e6:.2f} M", label=f"Rats, {sweep_period.value} (median)", caption=f"90%: {chain_interval[0] / 1e6:.2f}–{chain_interval[2] / 1e6:.2f} million"),
+                ],
+                widths="equal",
+            ),
+            mo.md(
+                f"With {chain_colony_size.value[0]}–{chain_colony_size.value[1]} rats per "
+                f"colony, the sweep-based chain gives **{chain_interval[0] / 1e6:.2f}–"
+                f"{chain_interval[2] / 1e6:.2f} million rats** ({sweep_period.value}). "
+                "Every input except colony size now comes from NYC data or NYC-scale "
+                "field evidence.\n\n"
+                f"**Burrow cross-check.** {_r['burrow_share']:.0%} of lots with active "
+                "signs in sweeps had burrows recorded. Taking NYC Health's own 1–12 rats "
+                "per active burrow and 1–2 burrows per lot gives "
+                f"{_burrow_lo / 1e6:.2f}–{_burrow_hi / 1e6:.2f} million rats in burrows on "
+                "inspected lots, a route that doesn't use colony size at all. "
+                + (
+                    "That range overlaps the colony-based one above, but it is far wider, "
+                    "because burrow *counts* aren't recorded (6.7). "
+                    if _burrow_hi >= chain_interval[0] and _burrow_lo <= chain_interval[2]
+                    else "That range does not overlap the colony-based one above, which "
+                    "suggests the colony settings are off. "
+                )
+                + "It also misses rats in sewers, subways and building interiors."
+            ),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    survey_blocks = mo.ui.slider(50, 1000, value=300, step=50, label="Blocks to survey", show_value=True)
+    mo.vstack(
+        [
+            mo.md(
+                "### 6.5 · Designing a real field survey\n\n"
+                "Sweeps only cover the neighbourhoods the city chose, which is the "
+                "weakness in 6.3. A survey of a **random** sample of blocks from every "
+                "stratum fixes that, and if it counts rats (live trapping with marking, "
+                "or camera traps with spatial capture-recapture, as in Baltimore and "
+                "Vancouver) it removes colony size from the problem entirely. Below is a "
+                "Neyman allocation over the same strata, planned on the sweeps' "
+                "block-level variability, and a reproducible random sample."
+            ),
+            survey_blocks,
+        ]
+    )
+    return (survey_blocks,)
+
+
+@app.cell
+def _(np, pd, survey_blocks, sweep_results, sw):
+    _r = sweep_results["2023–24"]
+    _t = _r["blocks_est"]["table"].set_index(["intensity", "density"])
+    _sd = np.sqrt((_t["mean"] * (1 - _t["mean"])).clip(lower=0.05**2))
+    survey_alloc = sw.neyman_allocation(_t.frame_units, _sd, survey_blocks.value)
+    _se = sw.stratified_se(_t.frame_units, _sd, survey_alloc)
+    survey_cv = _se / float((_t.frame_units * _t["mean"]).sum())
+    _frame = _r["frame"].reset_index()
+    _rng = np.random.default_rng(2026)
+    _picks = []
+    for (_i, _d), _n in survey_alloc.items():
+        _pool = _frame[(_frame.intensity == _i) & (_frame.density == _d)]
+        _picks.append(_pool.sample(n=min(int(_n), len(_pool)), random_state=int(_rng.integers(1e9))))
+    survey_sample = pd.concat(_picks, ignore_index=True)[["block", "intensity", "density", "lots"]]
+    survey_sample.insert(1, "borough", survey_sample.block.str[0].map({"1": "Manhattan", "2": "Bronx", "3": "Brooklyn", "4": "Queens", "5": "Staten Island"}))
+    survey_sample.insert(2, "tax_block", survey_sample.block.str[1:].astype(int))
+    return survey_alloc, survey_cv, survey_sample
+
+
+@app.cell(hide_code=True)
+def _(mo, survey_alloc, survey_cv, survey_sample):
+    mo.vstack(
+        [
+            mo.md(
+                f"Surveying **{int(survey_alloc.sum())} blocks** this way would estimate "
+                f"citywide infested blocks with a coefficient of variation of about "
+                f"**{survey_cv:.0%}**, from a sample drawn across all five boroughs and "
+                "every stratum (planning on 2023–24 sweep variability; a rat count per "
+                "block will be more variable than presence, so treat this as optimistic)."
+            ),
+            mo.ui.table(survey_alloc.rename("blocks to survey").reset_index(), selection=None),
+            mo.download(
+                survey_sample.to_csv(index=False).encode(),
+                filename="ratlas-field-survey-sample.csv",
+                label="Download the block sample (CSV, seed 2026)",
+            ),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(chain_interval, mo):
+    ckmr_adults = mo.ui.slider(
+        5_000, 2_000_000, value=int(round(chain_interval[1] / 2, -4)) or 10_000, step=5_000,
+        label="Adult rats in the study area", show_value=True,
+    )
+    ckmr_pairs = mo.ui.slider(20, 150, value=50, step=10, label="Parent–offspring pairs wanted", show_value=True)
+    mo.vstack(
+        [
+            mo.md(
+                "### 6.6 · Genetics: close-kin mark-recapture\n\n"
+                "Close-kin mark-recapture (Bravington et al. 2016) estimates abundance "
+                "from how many sampled animals turn out to be parent and offspring: in "
+                "a well-mixed population of *N* adults, sampling *n* adults and *n* "
+                "juveniles yields about 2*n*²/*N* such pairs. It needs only tissue from "
+                "rats already killed by control programmes, no recapture. I found no "
+                "application to city rats yet. The default is half the median "
+                "head count from 6.4."
+            ),
+            ckmr_adults,
+            ckmr_pairs,
+        ]
+    )
+    return ckmr_adults, ckmr_pairs
+
+
+@app.cell(hide_code=True)
+def _(ckmr_adults, ckmr_pairs, mo, sw):
+    _n = sw.ckmr_samples(ckmr_adults.value, ckmr_pairs.value)
+    mo.md(
+        f"About **{_n:,.0f} adults and {_n:,.0f} juveniles** ({2 * _n:,.0f} genotyped "
+        f"rats) to expect {ckmr_pairs.value} parent–offspring pairs among "
+        f"{ckmr_adults.value:,} adults. Citywide that is a large but not absurd "
+        "genotyping effort; for one rat mitigation zone it is a single season of "
+        "carcass collection. The catch is spatial structure: NYC rats within ~200 m "
+        "are close kin (Combs et al. 2018), so samples must be spread evenly or the "
+        "model made spatially explicit, otherwise kin pairs are over-found and *N* "
+        "comes out too small."
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### 6.7 · What to ask the Health Department for
+
+    The public inspection file is missing three things that would remove most of
+    the remaining guesswork: **a flag for proactive vs. complaint inspections**
+    (replacing the inference in 6.1), **the 0–3 severity scores** inspectors
+    record for each active sign, and **counts of active burrows** (turning the
+    burrow cross-check into an estimate). A draft records request is in
+    `research/foil_request.md`.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 7. Which estimator should we trust? A simulation study
 
     We simulate a city with a **known** number of infested lots (40,000), four
     occasions, and controllable violations: lot-to-lot heterogeneity in
@@ -1423,13 +1926,14 @@ def _(mo, sim_grid):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## 7. Results
+    ## 8. Results
     """)
     return
 
 
 @app.cell
-def _(multi_best, open_model, pd, repro, strat_both, two_source):
+def _(multi_best, open_model, pd, repro, strat_both, sweep_results, two_source):
+    _sweep_lots = sweep_results["2010–11"]["lots_est"]
     results = pd.DataFrame(
         [
             {"estimate": "Reproduction: Lincoln–Petersen, H1 2010 vs H1 2011", "n": repro["lincoln_petersen"], "low": repro["low"], "high": repro["high"], "main weakness": "turnover inflates; heterogeneity deflates"},
@@ -1437,7 +1941,8 @@ def _(multi_best, open_model, pd, repro, strat_both, two_source):
             {"estimate": "Stratified Chapman, borough × lot type", "n": strat_both.n, "low": strat_both.low, "high": strat_both.high, "main weakness": "turnover; within-stratum heterogeneity"},
             {"estimate": f"Best multi-occasion model ({multi_best.model})", "n": multi_best.n, "low": multi_best.low, "high": multi_best.high, "main weakness": "model choice; residual turnover inside the year"},
             {"estimate": "Open heterogeneous model, fitted by simulation", "n": open_model["n"], "low": open_model["low"], "high": open_model["high"], "main weakness": "upper end not identifiable; simplified simulation"},
-            {"estimate": "Two-source, 311 × inspections", "n": two_source["chapman"], "low": two_source["low"], "high": two_source["high"], "main weakness": "sources are dependent → biased low"},
+            {"estimate": "Two-source, 311 × inspections", "n": two_source["chapman"], "low": two_source["low"], "high": two_source["high"], "main weakness": "inspections cover few neighbourhoods → biased low"},
+            {"estimate": "Inspection sweeps as a field survey (stratified, 2010–11)", "n": _sweep_lots["total"], "low": _sweep_lots["low"], "high": _sweep_lots["high"], "main weakness": "swept neighbourhoods aren't random; inspectors miss some lots"},
         ]
     )
     return (results,)
@@ -1467,8 +1972,12 @@ def _(alt, mo, results):
 
 
 @app.cell(hide_code=True)
-def _(mo, open_model, reproduction_gap, results, sim_grid):
+def _(chain_interval, mo, open_model, repro, reproduction_gap, results, sim_grid, sweep_results):
     _spread = results.n.max() / results.n.min()
+    _sweep_gap = sweep_results["2010–11"]["lots_est"]["total"] / repro["lincoln_petersen"] - 1
+    _now = sweep_results["2023–24"]
+    _block_methods = [_now["blocks_est"]["total"], _now["detection_blocks"], _now["block_chapman"]["chapman"]]
+    _bracket = max(_block_methods) / min(_block_methods)
     _models_agree = results.n.iloc[:5].max() / results.n.iloc[:5].min() < 1.25
     _sim_ok = sim_grid.drop(columns=["heterogeneity", "turnover"]).abs().min(axis=1).max() < 0.15
     readiness = [
@@ -1479,9 +1988,14 @@ def _(mo, open_model, reproduction_gap, results, sim_grid):
         ),
         ("Defensible estimators agree within ±25%", _models_agree),
         ("Some estimator stays within ±15% in every simulated scenario", _sim_ok),
-        ("The data bound infested lots from above", not open_model["at_edge"]),
+        ("Capture-recapture alone bounds infested lots from above", not open_model["at_edge"]),
+        (
+            f"An independent method (inspection sweeps) agrees with the reproduction within ±25% (it is {_sweep_gap:+.0%})",
+            abs(_sweep_gap) <= 0.25,
+        ),
+        (f"Sweep-based methods bracket today's infested blocks within a factor of 2.5 ({_bracket:.1f}×)", _bracket <= 2.5),
         ("Colony size and lots-per-colony are supported by NYC evidence", False),
-        ("Independent second source available (proactive inspections)", False),
+        ("Proactive inspections are flagged in the public data, not inferred (see 6.7)", False),
     ]
     _ready = all(ok for _, ok in readiness)
     _lines = "\n".join(f"- {'✅' if ok else '❌'} {text}" for text, ok in readiness)
@@ -1493,14 +2007,18 @@ def _(mo, open_model, reproduction_gap, results, sim_grid):
                 mo.md(
                     "**Recommendation: publish.** All checks pass."
                     if _ready
-                    else f"**Recommendation: don't publish a rat head count.** Estimates "
-                    f"of infested lots span a factor of {_spread:.1f} across reasonable "
-                    "methods, the data cannot bound them from above, and the step from "
-                    "lots to rats rests on colony assumptions with no local evidence. "
-                    "If anything goes on the site, it should be a *lower bound on "
-                    f"infested lots* (about {open_model['low']:,.0f}, from the open "
-                    "model's plausible range), clearly labelled as an estimate from 311 "
-                    "reports, not a rat census."
+                    else "**Recommendation: don't publish a rat head count yet.** The "
+                    "inspection sweeps close much of the gap: they give an independent "
+                    f"2010–11 infested-lot figure ({_sweep_gap:+.0%} vs the reproduction) "
+                    "and bracket today's infested blocks "
+                    f"at {min(_block_methods):,.0f}–{max(_block_methods):,.0f}. But rats per "
+                    "colony still has no NYC evidence, and it scales the head count "
+                    f"directly (the current settings give {chain_interval[0] / 1e6:.1f}–"
+                    f"{chain_interval[2] / 1e6:.1f} million). The most defensible thing "
+                    "the site could show is the **share of blocks with active rat signs**, "
+                    "labelled as an estimate from city inspections and 311 reports, not a "
+                    "rat census. A field survey (6.5) or the records in 6.7 would be the "
+                    "next step to a head count."
                 ),
                 kind="success" if _ready else "danger",
             ),
@@ -1510,8 +2028,10 @@ def _(mo, open_model, reproduction_gap, results, sim_grid):
 
 
 @app.cell(hide_code=True)
-def _(PUBLISHED, open_model, readiness, repro, reproduction_gap, results):
+def _(PUBLISHED, chain_interval, open_model, readiness, repro, reproduction_gap, results, sweep_period, sweep_results):
     _ready = all(ok for _, ok in readiness)
+    _then, _now = sweep_results["2010–11"], sweep_results["2023–24"]
+    _now_blocks = [_now["blocks_est"]["total"], _now["detection_blocks"], _now["block_chapman"]["chapman"]]
     summary_text = (
         "**Summary (generated from the results below).** Re-running Auerbach's "
         f"design on today's data gives **{repro['lincoln_petersen']:,.0f} infested lots** "
@@ -1525,8 +2045,16 @@ def _(PUBLISHED, open_model, readiness, repro, reproduction_gap, results):
         f"**{open_model['n']:,.0f} lots infested at any one time**, plausibly "
         f"{open_model['low']:,.0f}–{open_model['high']:,.0f}, and the upper end "
         f"{'cannot be pinned down by these data' if open_model['at_edge'] else 'is reasonably constrained'}. "
-        "Converting lots to rats adds colony assumptions with no local evidence. "
-        + ("Ready to publish." if _ready else "**Not ready to publish** (section 7).")
+        "**The city's own proactive inspection sweeps close much of the gap:** used "
+        f"as a field survey they put 2010–11 infested lots at {_then['lots_est']['total']:,.0f} "
+        f"({_then['lots_est']['total'] / repro['lincoln_petersen'] - 1:+.0%} vs the reproduction), "
+        "and 2023–24 infested blocks at "
+        f"{min(_now_blocks):,.0f}–{max(_now_blocks):,.0f}. With colony territories of "
+        "3–7 lots (from home-range studies and NYC lot sizes) and 40–50 rats per "
+        f"colony, that is **{chain_interval[0] / 1e6:.1f}–{chain_interval[2] / 1e6:.1f} "
+        f"million rats** ({sweep_period.value}), but colony size still has no NYC "
+        "evidence. "
+        + ("Ready to publish." if _ready else "**Not ready to publish** (section 8).")
     )
     return (summary_text,)
 
@@ -1537,7 +2065,7 @@ def _(a5_positive_share, mo, repro_variants, validation):
     _cleaning = _clean.max() / _clean.min() - 1
     mo.md(
         f"""
-    ## 8. Assumptions register
+    ## 9. Assumptions register
 
     Every assumption the analysis makes, where it is used, and what the data says.
 
@@ -1552,9 +2080,18 @@ def _(a5_positive_share, mo, repro_variants, validation):
     | A3 | Independence between occasions | §3 | Treated lots differ in re-report rate; confounded by selection (§4 A3) | Unknown sign |
     | A4 | Stable marks (BBLs) | all | Small share missing from PLUTO or condo units (§4 A4) | Bounded by variants in §3 |
     | A5 | A report means an infestation | all | {a5_positive_share:.0%} of inspected reported lots showed active signs (§4 A5) | False positives inflate N̂ |
-    | A6a | One colony per infested lot | §5.6 | Reported lots cluster on blocks (§4 A6) | Too many colonies → too many rats |
-    | A6b | 40–50 rats per colony | §5.6 | Literature value; **no NYC evidence here** | Scales the head count directly |
-    | S1 | Simulation: logit-normal heterogeneity, random turnover | §6 | A simplification; real heterogeneity is skewed by lot size | Bias magnitudes are illustrative |
+    | A6a | Colony territory = 3–7 lots (Auerbach: 1) | §5.6, §6.4 | Home ranges 30–45 m across (Baltimore) vs. 234 m² median NYC lot; NYC rats within ~200 m are kin; sweeps find 2–6 infested lots per infested block | Fewer lots per colony → more colonies → more rats |
+    | A6b | 40–50 rats per colony | §5.6, §6.4 | Untraceable lore; NYC Health says 1–12 rats per active burrow; **no NYC colony count** | Scales the head count directly |
+    | W1 | Proactive sweeps = ≥5 lots on a block in a day, ≤20% complaint-preceded, ≥70% coverage | §6 | Sweeps fall in the programme's published neighbourhoods; coverage 73–88% | Misclassified visits blur the survey |
+    | W2 | Swept blocks' infestation rates apply citywide within a stratum (311 intensity × density) | §6.3 | Swept neighbourhoods are high-risk, so likely an overstatement | Stratified estimate is an upper end |
+    | W3 | Swept neighbourhoods' 311 detection rate applies citywide | §6.3 | People report less elsewhere, so likely an understatement | Detection-rate estimate is a lower end |
+    | W4 | Inspector sensitivity between the two-source value and 100% | §6.2, §6.4 | Two-source assumes independence; positive dependence biases it up | Missed blocks scale the total |
+    | W5 | A report within ±3 months of a sweep counts as detecting that infestation | §6.2 | Matches the half-year occasions | A wider window raises detection |
+    | W6 | Colonies on a block = max(1, infested lots ÷ lots per colony) | §6.4 | Simple territory model | Clumped colonies would lower the count |
+    | W7 | Burrow cross-check: 1–2 burrows per lot, 1–12 rats per burrow (NYC Health) | §6.4 | Burrow *presence* is recorded, not counts | Floor only; misses sewers and interiors |
+    | W8 | Close-kin design assumes random mixing | §6.6 | Violated at <200 m (Combs et al. 2018) | Needs spatial sampling or a spatial model |
+    | S5 | Infested blocks uniform between the detection-rate and stratified estimates | §6.4 | The honest summary of a two-sided bracket | Interval shape is a choice |
+    | S1 | Simulation: logit-normal heterogeneity, random turnover | §7 | A simplification; real heterogeneity is skewed by lot size | Bias magnitudes are illustrative |
     | S2 | Monte Carlo: uniform ranges for colony inputs | §5.6 | A choice; no distribution is known | Interval width depends on ranges |
     | S3 | Open model: logit-normal heterogeneity, constant quarterly turnover, report rates matched per quarter | §5.4 | Reproduces the observed frequency and lag-overlap statistics | Upper bound depends on how far heterogeneity is allowed to go |
     | S4 | Calibration grid: 15k–200k lots, σ 0–3, turnover 0–35% per quarter | §5.4 | Best fit inside the grid; plausible set may reach its edge | A wider grid could raise the upper end further |
@@ -1568,7 +2105,7 @@ def _(mo, sources):
     _fetched = sorted({m["fetched"][:10] for m in sources.manifest().values()})
     mo.md(
         f"""
-    ## 9. Reproducibility and references
+    ## 10. Reproducibility and references
 
     **Run it:** `uvx marimo edit --sandbox research/rat_population.py` (dependencies
     are declared at the top of the file). Tests for the estimators:
@@ -1581,6 +2118,15 @@ def _(mo, sources):
     - Seber, G. A. F. (1982). *The Estimation of Animal Abundance and Related Parameters* (2nd ed.). Griffin.
     - Chao, A. (1987). Estimating the population size for capture-recapture data with unequal catchability. *Biometrics* 43, 783–791.
     - Fienberg, S. E. (1972). The multiple recapture census for closed populations and incomplete 2^k contingency tables. *Biometrika* 59, 591–603.
+    - Davis, D. E. & Fales, W. T. (1950). The rat population of Baltimore, 1949. *American Journal of Hygiene* 52, 143–146.
+    - Easterbrook, J. D. et al. (2005). Norway rat population in Baltimore, Maryland, 2004. *Vector-Borne and Zoonotic Diseases* 5, 296–299.
+    - Gardner-Santana, L. C. et al. (2009). Commensal ecology, urban landscapes, and their influence on the genetic characteristics of city-dwelling Norway rats. *Molecular Ecology* 18, 2766–2778.
+    - Combs, M. et al. (2018). Spatial population genomics of the brown rat (*Rattus norvegicus*) in New York City. *Molecular Ecology* 27, 83–98.
+    - Byers, K. A. et al. (2019). Rats about town: a systematic review of rat movement in urban ecosystems. *Frontiers in Ecology and Evolution* 7, 13.
+    - Himsworth, C. G. et al. (2014). The characteristics of wild rat populations from an inner-city neighborhood. *PLoS ONE* 9, e91654.
+    - CDC (2012). Evaluation of a neighborhood rat-management program — New York City, December 2007–August 2009. *MMWR* 61(37), 733–736.
+    - NYC Department of Health and Mental Hygiene. *Rat Academy* training presentation (1–12 rats per active burrow).
+    - Bravington, M. V., Skaug, H. J. & Anderson, E. C. (2016). Close-kin mark-recapture. *Statistical Science* 31, 259–274.
     - Link, W. A. (2003). Nonidentifiability of population size from capture-recapture data with heterogeneous detection probabilities. *Biometrics* 59, 1123–1130.
     - Beaumont, M. A., Zhang, W. & Balding, D. J. (2002). Approximate Bayesian computation in population genetics. *Genetics* 162, 2025–2035.
     - Rivest, L.-P. & Baillargeon, S. (2007). Applications and extensions of Chao's moment estimator for the size of a closed population. *Biometrics* 63, 999–1006 (the Rcapture models).

@@ -260,3 +260,49 @@ def rodent_complaints(start: str, end: str, refresh: bool = False) -> pd.DataFra
     data["bbl"] = normalize_bbl(data["bbl"])
     data["complaints"] = pd.to_numeric(data["complaints"])
     return data.dropna(subset=["bbl"])
+
+
+def inspection_records(start: str, end: str, refresh: bool = False) -> pd.DataFrame:
+    """Every initial DOHMH rodent inspection in [start, end), one row each,
+    for finding proactive block sweeps (see the notebook's section 10)."""
+    data = fetch(
+        f"inspection_records_{start}_{end}",
+        INSPECTIONS,
+        "job_id, inspection_date, result, observations, bbl, boro_code, block, nta",
+        f"inspection_type='Initial' AND inspection_date >= '{start}T00:00:00' "
+        f"AND inspection_date < '{end}T00:00:00'",
+        "inspection_date, job_id",
+        refresh=refresh,
+    )
+    data["inspection_date"] = pd.to_datetime(data["inspection_date"])
+    data["bbl"] = normalize_bbl(data["bbl"])
+    data["rat_activity"] = data["result"].str.contains("Rat Activity", na=False)
+    return data
+
+
+def rodent_complaint_records(start: str, end: str, refresh: bool = False) -> pd.DataFrame:
+    """Every 311 Rodent complaint (any descriptor) in [start, end), one row
+    each, so inspections can be matched to the complaints that triggered them."""
+    frames = []
+    for dataset, lo, hi in (
+        (SIGHTINGS_2010_2019, "2000-01-01", "2020-01-01"),
+        (SIGHTINGS_2020_ON, "2020-01-01", "2100-01-01"),
+    ):
+        a, b = max(start, lo), min(end, hi)
+        if a >= b:
+            continue
+        frames.append(
+            fetch(
+                f"rodent_records_{a}_{b}",
+                dataset,
+                "unique_key, created_date, descriptor, bbl",
+                f"complaint_type='Rodent' AND created_date >= '{a}T00:00:00' "
+                f"AND created_date < '{b}T00:00:00'",
+                "unique_key",
+                refresh=refresh,
+            )
+        )
+    data = pd.concat(frames, ignore_index=True)
+    data["created_date"] = pd.to_datetime(data["created_date"])
+    data["bbl"] = normalize_bbl(data["bbl"])
+    return data
