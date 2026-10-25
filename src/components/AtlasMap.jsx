@@ -132,9 +132,8 @@ export default function AtlasMap({
   quiet = false,
   trail,
 }) {
-  const { motion, discover } = useCityPlay();
+  const { motion, night, setNight } = useCityPlay();
   const [mode, setMode] = useState("bubbles");
-  const [night, setNight] = useState(false);
   const [transform, setTransform] = useState(zoomIdentity);
   const [hover, setHover] = useState(null);
   const [run, setRun] = useState(null);
@@ -383,10 +382,8 @@ export default function AtlasMap({
   const changeZoom = (factor) =>
     select(svgRef.current).call(zoomRef.current.scaleBy, factor);
   const choose = (zip) => setSelectedZip(selectedZip === zip ? null : zip);
-  const toggleNight = () => {
-    setNight((value) => !value);
-    if (!night) discover("night");
-  };
+  // The compass is a shortcut to the site-wide Night shift.
+  const toggleNight = () => setNight((value) => !value);
   const showHover = (zip) => (event) => {
     if (event.type === "pointerenter" && event.pointerType !== "mouse") return;
     if (byZip.has(zip) && points.has(zip)) setHover(zip);
