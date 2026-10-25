@@ -1,11 +1,59 @@
 import { useEffect, useState } from "react";
 import { useCityPlay } from "./CityPlay.jsx";
 
+// Each year holds the stage long enough for the map to blend into it.
+const DWELL = 1700;
+
+// Every month across the playable years, with the current year lit up and a
+// playhead that sweeps through its months while the animation runs.
+function YearTrack({ months, first, last, year, playing, active }) {
+  const width = 300,
+    height = 34;
+  const span = (last - first + 1) * 12;
+  const peak = Math.max(1, ...months.map((m) => m.count));
+  const x = (i) => (i / (span - 1)) * width;
+  const line = months
+    .map((m, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${(height - 3 - (m.count / peak) * (height - 8)).toFixed(1)}`)
+    .join("");
+  const bandX = x((year - first) * 12),
+    bandW = x(11) - x(0);
+  return (
+    <svg
+      className={`year-track ${active ? "is-active" : ""}`}
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <rect
+        className="year-band"
+        x={bandX}
+        width={bandW}
+        height={height}
+        rx="2"
+      />
+      <path d={line} className="year-line" vectorEffect="non-scaling-stroke" />
+      {active && (
+        <line
+          key={`${year}-${playing}`}
+          className={`year-playhead ${playing ? "is-sweeping" : ""}`}
+          x1={bandX}
+          x2={bandX}
+          y1="0"
+          y2={height}
+          style={{ "--sweep": `${bandW}px`, "--dwell": `${DWELL}ms` }}
+          vectorEffect="non-scaling-stroke"
+        />
+      )}
+    </svg>
+  );
+}
+
 export default function HotspotPlayer({
   coverage,
   activeYear,
   onFrame,
   onReset,
+  months = [],
 }) {
   const first = Number(coverage.from.slice(0, 4));
   const last = Number(coverage.to.slice(0, 4)) - 1;
@@ -25,7 +73,7 @@ export default function HotspotPlayer({
     }
     const timer = setTimeout(
       () => onFrame((activeYear ?? first - 1) + 1),
-      1200,
+      DWELL,
     );
     return () => clearTimeout(timer);
   }, [playing, motion, activeYear, first, last, onFrame]);
@@ -65,6 +113,16 @@ export default function HotspotPlayer({
         </button>
         <label>
           <span className="sr-only">Hotspot year</span>
+          {months.length > 0 && (
+            <YearTrack
+              months={months}
+              first={first}
+              last={last}
+              year={year}
+              playing={playing && motion}
+              active={activeYear !== null}
+            />
+          )}
           <input
             type="range"
             min={first}

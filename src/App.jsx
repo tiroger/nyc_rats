@@ -3,6 +3,7 @@ import Rat from "./components/Rat.jsx";
 import AtlasMap from "./components/AtlasMap.jsx";
 import Insights from "./components/Insights.jsx";
 import HotspotPlayer from "./components/HotspotPlayer.jsx";
+import { FlipText, Odometer, PizzaConfetti } from "./components/Motion.jsx";
 import {
   CityCorner,
   HeroRat,
@@ -21,6 +22,8 @@ import {
   BOROUGHS,
   COLORS,
   monthLabel,
+  monthOffset,
+  monthSequence,
   number,
   periodMetrics,
   presetForRange,
@@ -212,6 +215,29 @@ export default function App() {
     [data],
   );
 
+  // The hover card's sparkline: up to the last 12 months of the period.
+  const zipTrail = useCallback(
+    (zip) => {
+      const from = monthOffset(end, -11) < start ? start : monthOffset(end, -11);
+      const counts = new Map(monthSequence(from, end).map((m) => [m, 0]));
+      for (const [month, b, z, count] of data.rows)
+        if (
+          z === zip &&
+          counts.has(month) &&
+          (borough === "All NYC" || BOROUGHS[b] === borough)
+        )
+          counts.set(month, counts.get(month) + count);
+      return [...counts.values()];
+    },
+    [data, start, end, borough],
+  );
+  const playableMonths = useMemo(() => {
+    if (!data) return [];
+    const first = data.coverage.from.slice(0, 4),
+      last = Number(data.coverage.to.slice(0, 4)) - 1;
+    return summarize(data, `${first}-01`, `${last}-12`, borough).months;
+  }, [data, borough]);
+
   useEffect(() => {
     if (!data) return;
     const url = new URL(window.location.href);
@@ -297,6 +323,13 @@ export default function App() {
   const historicalPeak = historicalMetrics.peakMonths[0];
   const stale = Date.now() - Date.parse(data.generatedAt) > 3 * 86400_000;
   const partial = end === data.coverage.to.slice(0, 7);
+  const recordView =
+    borough === "All NYC" &&
+    start === end &&
+    historicalMetrics.peakMonths.some((r) => r.month === start);
+  const quietest = BOROUGHS.slice(0, 5).reduce((a, b) =>
+    allBoroughs.byBorough[b] < allBoroughs.byBorough[a] ? b : a,
+  );
   const periodText = rangeLabel(range);
   const mapSummary =
     mapLayer === "properties"
@@ -508,19 +541,24 @@ export default function App() {
             </span>
           </div>
           <div className="stats-grid" aria-live="polite">
+            {recordView && <PizzaConfetti key={start} />}
             <div className="stat">
               <span className="eyebrow">REPORTED SIGHTINGS</span>
               <strong data-testid="total-reports">
-                {number.format(summary.total)}
+                <Odometer value={summary.total} />
               </strong>
               <span>311 reports in this selection</span>
             </div>
             <div className="stat">
               <span className="eyebrow">THE MONTHLY PACE</span>
               <strong data-testid="monthly-average">
-                {metrics.monthlyAverage === null
-                  ? "—"
-                  : number.format(Math.round(metrics.monthlyAverage))}
+                <Odometer
+                  value={
+                    metrics.monthlyAverage === null
+                      ? null
+                      : Math.round(metrics.monthlyAverage)
+                  }
+                />
                 <small> / mo</small>
               </strong>
               <span>
@@ -536,11 +574,16 @@ export default function App() {
                   : "SHARE OF NYC REPORTS"}
               </span>
               <strong className={borough === "All NYC" ? "stat-word" : ""}>
-                {borough === "All NYC"
-                  ? summary.total
-                    ? top[0]
-                    : "—"
-                  : `${allBoroughs.total ? ((summary.total / allBoroughs.total) * 100).toFixed(1) : "0"}%`}
+                {borough === "All NYC" ? (
+                  <FlipText text={summary.total ? top[0] : "—"} />
+                ) : (
+                  <Odometer
+                    value={
+                      allBoroughs.total ? summary.total / allBoroughs.total : 0
+                    }
+                    text={`${allBoroughs.total ? ((summary.total / allBoroughs.total) * 100).toFixed(1) : "0"}%`}
+                  />
+                )}
               </strong>
               <span>
                 {borough === "All NYC"
@@ -551,16 +594,18 @@ export default function App() {
             <div className="stat">
               <span className="eyebrow">BUSIEST MONTH IN THIS PERIOD</span>
               <strong className="stat-word" data-testid="peak-month">
-                {peak ? monthLabel(peak.month, true) : "—"}
+                <FlipText text={peak ? monthLabel(peak.month, true) : "—"} />
                 {metrics.peakMonths.length > 1
                   ? ` +${metrics.peakMonths.length - 1}`
                   : ""}
               </strong>
               <span>
                 {number.format(metrics.peakCount)} reports ·{" "}
-                {metrics.peakMonths.length > 1
-                  ? "tied peak months"
-                  : "selected dates and borough"}
+                {recordView
+                  ? "the citywide record since 2010"
+                  : metrics.peakMonths.length > 1
+                    ? "tied peak months"
+                    : "selected dates and borough"}
               </span>
             </div>
           </div>
@@ -666,10 +711,14 @@ export default function App() {
                 unit={mapUnit}
                 scaleMaximum={mapLayer === "reports" ? fixedScale : undefined}
                 emptyMessage={mapEmpty}
+                frame={mapLayer === "reports" ? animationYear : null}
+                quiet={borough === quietest && summary.total > 0}
+                trail={mapLayer === "reports" ? zipTrail : undefined}
               />
               <HotspotPlayer
                 coverage={data.coverage}
                 activeYear={animationYear}
+                months={playableMonths}
                 onFrame={showFrame}
                 onReset={() => {
                   setAnimationYear(null);
@@ -747,7 +796,13 @@ export default function App() {
                 </div>
                 <span className="tag mono">{borough.toUpperCase()}</span>
               </div>
-              <Trend months={summary.months} borough={borough} />
+              <Trend
+                months={summary.months}
+                borough={borough}
+                record={
+                  borough === "All NYC" ? historicalPeak.month : undefined
+                }
+              />
               <p className="chart-note">
                 Monthly 311 rat-sighting reports.{" "}
                 {partial &&

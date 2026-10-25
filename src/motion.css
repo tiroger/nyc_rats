@@ -1,0 +1,701 @@
+/* Shared motion vocabulary. Everything here stops with the Motion switch or a
+   reduced-motion preference (see city-play.css and style.css). */
+:root {
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Odometer: digits roll like a subway counter. */
+.odometer {
+  display: inline-block;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.odo-char {
+  display: inline-block;
+  position: relative;
+  clip-path: inset(0 -0.2em);
+}
+.odo-char > span {
+  display: inline-block;
+}
+.odo-char[data-prev]::after {
+  content: attr(data-prev);
+  content: attr(data-prev) / "";
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.odo-up > span {
+  animation: odo-in-up 0.6s var(--ease-out) var(--odo-delay, 0ms) both;
+}
+.odo-down > span {
+  animation: odo-in-down 0.6s var(--ease-out) var(--odo-delay, 0ms) both;
+}
+.odo-up[data-prev]::after {
+  animation: odo-out-up 0.6s var(--ease-out) var(--odo-delay, 0ms) both;
+}
+.odo-down[data-prev]::after {
+  animation: odo-out-down 0.6s var(--ease-out) var(--odo-delay, 0ms) both;
+}
+@keyframes odo-in-up {
+  from {
+    transform: translateY(105%);
+  }
+}
+@keyframes odo-in-down {
+  from {
+    transform: translateY(-105%);
+  }
+}
+@keyframes odo-out-up {
+  to {
+    transform: translateY(-105%);
+  }
+}
+@keyframes odo-out-down {
+  to {
+    transform: translateY(105%);
+  }
+}
+.flip-text {
+  display: inline-block;
+  transform-origin: 50% 100%;
+  animation: flip-in 0.5s var(--ease-spring) both;
+}
+@keyframes flip-in {
+  from {
+    opacity: 0;
+    transform: translateY(35%) rotateX(70deg);
+  }
+}
+
+/* The record month gets a shower of imaginary pizza. */
+.stats-grid {
+  position: relative;
+}
+.pizza-confetti {
+  position: absolute;
+  inset: -36px 0 auto;
+  height: 0;
+  pointer-events: none;
+  z-index: 5;
+  color: var(--ink);
+}
+.pizza-confetti > span {
+  position: absolute;
+  top: 0;
+  animation: pizza-fall 2.1s cubic-bezier(0.3, 0.6, 0.5, 1) var(--delay) both;
+}
+.pizza-confetti svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@keyframes pizza-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) rotate(0);
+  }
+  10%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), 190px) rotate(var(--spin));
+  }
+}
+
+/* Map */
+.map-canvas {
+  transition: background-color 0.5s;
+}
+.water-dot {
+  fill: #b1c9c4;
+  opacity: 0.5;
+}
+.layer-enter {
+  animation: fade-in 0.45s ease-out;
+}
+.bubble-ghost {
+  fill-opacity: 0.35;
+  stroke: #faf9f2;
+  stroke-width: 0.8;
+  pointer-events: none;
+}
+.ghost-year {
+  font-size: 96px;
+  font-weight: 700;
+  letter-spacing: -5px;
+  fill: var(--ink);
+  opacity: 0.1;
+  pointer-events: none;
+  animation: ghost-year-in 0.6s var(--ease-out) both;
+}
+@keyframes ghost-year-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+.hotspot-jump {
+  pointer-events: none;
+}
+.jump-ring,
+.jump-echo,
+.jump-label,
+.sniff-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.jump-ring {
+  fill: none;
+  stroke: var(--ink);
+  animation: jump-in 0.5s var(--ease-spring) 0.35s both;
+}
+.jump-echo {
+  fill: none;
+  stroke: #c96747;
+  stroke-width: 2;
+  opacity: 0;
+  animation: jump-echo 1.1s ease-out 0.35s 2;
+}
+.jump-label {
+  font-family: var(--mono);
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: #f6f4e9;
+  stroke-width: 3px;
+  animation: jump-in 0.5s var(--ease-spring) 0.45s both;
+}
+@keyframes jump-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes jump-echo {
+  from {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+.sniff-ring {
+  fill: none;
+  stroke: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  animation: sniff 0.9s ease-out var(--sniff-delay, 0ms) 2;
+}
+@keyframes sniff {
+  from {
+    opacity: 0.9;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+.map-runner {
+  pointer-events: none;
+  color: var(--lime);
+  --rat-detail: var(--ink);
+}
+.map-runner svg {
+  overflow: visible;
+  filter: drop-shadow(0 0 0.6px var(--ink)) drop-shadow(0 0 0.6px var(--ink))
+    drop-shadow(0 2px 3px #263c2e66);
+}
+.night-shift .map-runner svg {
+  filter: drop-shadow(0 0 3px #dcf080aa);
+}
+.borough-shape,
+.zip-shape {
+  vector-effect: non-scaling-stroke;
+}
+.run-trail {
+  fill: none;
+  stroke: var(--ink);
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+.map-detail {
+  transform-origin: 0 100%;
+  animation: detail-pop 0.4s var(--ease-spring) var(--detail-delay, 0ms) both;
+}
+@keyframes detail-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+}
+
+/* Hover card */
+.hover-card {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 172px;
+  max-width: 230px;
+  padding: 11px 13px 12px;
+  background: #faf9f2;
+  border: 1px solid #adbba1;
+  border-radius: 5px;
+  box-shadow: 0 6px 22px #263c2e1f;
+  font-size: 11px;
+  --x: -50%;
+  --y: calc(-100% - 16px);
+  transform: translate(var(--x), var(--y));
+  animation: hover-in 0.18s var(--ease-out);
+}
+.hover-card.below {
+  --y: 16px;
+}
+.hover-card.align-start {
+  --x: -24px;
+}
+.hover-card.align-end {
+  --x: calc(-100% + 24px);
+}
+@keyframes hover-in {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+.hover-card .eyebrow {
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.hover-card strong {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+}
+.hover-card b {
+  font-size: 14px;
+}
+.hover-rank {
+  font-size: 9px;
+  color: var(--muted);
+}
+.hover-trail,
+.hover-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 5px;
+  border-top: 1px solid var(--line);
+}
+.hover-trail small,
+.hover-meter small {
+  font-size: 8px;
+  color: var(--muted);
+}
+.hover-spark {
+  width: 100%;
+  height: 30px;
+  overflow: visible;
+}
+.hover-spark polyline {
+  fill: none;
+  stroke: #345f47;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.hover-spark circle {
+  fill: var(--lime);
+  stroke: var(--ink);
+  stroke-width: 1.2;
+}
+.rat-o-meter {
+  display: flex;
+  gap: 3px;
+  color: #ccd3c1;
+}
+.rat-o-meter svg {
+  width: 21px;
+  height: 12px;
+  --rat-detail: #faf9f2;
+}
+.rat-o-meter .is-on {
+  color: var(--ink);
+}
+
+/* The compass doubles as the switch to the night shift. */
+.compass-button {
+  position: absolute;
+  top: 3.5%;
+  right: 3%;
+  width: 34px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: #698272;
+  border-radius: 4px;
+}
+.compass-button svg {
+  width: 20px;
+  height: 30px;
+  overflow: visible;
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: currentColor;
+}
+.compass-button:hover svg,
+.compass-button:focus-visible svg {
+  animation: compass-wobble 0.8s ease-in-out;
+}
+.compass-button[aria-pressed="true"] {
+  color: var(--lime);
+}
+@keyframes compass-wobble {
+  30% {
+    transform: rotate(-16deg);
+  }
+  65% {
+    transform: rotate(11deg);
+  }
+}
+.night-shift {
+  background: #121d17;
+  border-color: #24352b;
+}
+.night-shift .water-dot {
+  fill: #3c5a4a;
+}
+.night-shift .borough-shape {
+  fill: #1c2a22;
+  stroke: #3d5847;
+}
+.night-shift .borough-shape.is-muted {
+  fill: #16221b;
+}
+.night-shift .zip-shape {
+  stroke: #4a6a57;
+}
+.night-shift .report-bubble,
+.night-shift .bubble-ghost {
+  fill: var(--lime);
+  stroke: #f4ffc4;
+  stroke-width: 0.5;
+}
+.night-shift .report-bubble {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: breathe var(--breathe, 3s) ease-in-out var(--breathe-delay, 0s)
+    infinite;
+}
+.night-shift .bubble-layer {
+  filter: url(#night-glow);
+}
+@keyframes breathe {
+  50% {
+    transform: scale(1.12);
+    fill-opacity: 0.8;
+  }
+}
+.night-shift .map-label {
+  fill: var(--lime);
+  stroke: #121d17;
+}
+.night-shift .water-label {
+  fill: #6f8f7f;
+}
+.night-shift .ghost-year {
+  fill: var(--lime);
+  opacity: 0.14;
+}
+.night-shift .map-runner {
+  color: var(--lime);
+  --rat-detail: #121d17;
+}
+.night-shift .run-trail,
+.night-shift .jump-ring,
+.night-shift .sniff-ring {
+  stroke: var(--lime);
+}
+.night-shift .jump-label {
+  fill: var(--lime);
+  stroke: #121d17;
+}
+
+/* The quietest borough gets a tumbleweed and a lonely local. */
+.quiet-stretch {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  container-type: inline-size;
+}
+.quiet-caption {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  font-size: 8px;
+  letter-spacing: 0.6px;
+  color: #4f6458;
+  background: #f5f3e9e6;
+  padding: 5px 8px;
+  border: 1px dashed #9cae99;
+  animation: quiet-moment 5s ease both;
+}
+.lonely-rat {
+  position: absolute;
+  left: 12%;
+  bottom: 13%;
+  width: 36px;
+  height: 21px;
+  color: var(--ink);
+  --rat-detail: #e6eeea;
+  animation: quiet-moment 5s ease both;
+}
+@keyframes quiet-moment {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  10%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.tumbleweed {
+  position: absolute;
+  bottom: 12%;
+  left: -50px;
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: #8b7a52;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  animation: tumble 4.4s cubic-bezier(0.3, 0.1, 0.5, 1) 0.5s both;
+}
+@keyframes tumble {
+  0% {
+    opacity: 0;
+    transform: translateX(0) rotate(0);
+  }
+  8% {
+    opacity: 1;
+  }
+  25% {
+    transform: translate(28cqw, -16px) rotate(260deg);
+  }
+  42% {
+    transform: translate(45cqw, 0) rotate(440deg);
+  }
+  62% {
+    transform: translate(66cqw, -10px) rotate(660deg);
+  }
+  78% {
+    transform: translate(82cqw, 0) rotate(840deg);
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(100cqw + 60px), 0) rotate(1080deg);
+  }
+}
+
+/* Time Machine */
+.player-controls label {
+  flex-direction: column;
+  gap: 4px;
+}
+.year-track {
+  display: block;
+  width: 100%;
+  height: 26px;
+  overflow: visible;
+}
+.year-band {
+  fill: #497564;
+  opacity: 0;
+  transition:
+    x 0.45s var(--ease-out),
+    opacity 0.3s;
+}
+.year-track.is-active .year-band {
+  opacity: 0.18;
+}
+.year-line {
+  fill: none;
+  stroke: #497564;
+  stroke-width: 1.2;
+  opacity: 0.75;
+}
+.year-playhead {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.year-playhead.is-sweeping {
+  animation: sweep var(--dwell) linear both;
+}
+@keyframes sweep {
+  to {
+    transform: translateX(var(--sweep));
+  }
+}
+
+/* Trend: the line draws itself, then the callouts point out the peaks. */
+.trend-wrap.is-waiting .trend-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.trend-wrap.is-waiting .trend-area,
+.trend-wrap.is-waiting .trend-callout {
+  opacity: 0;
+}
+.trend-wrap.is-drawn .trend-line {
+  stroke-dasharray: 1;
+  animation: trend-draw 1.2s var(--ease-out) both;
+}
+.trend-wrap.is-drawn .trend-area {
+  animation: fade-in 0.8s ease-out 0.45s both;
+}
+.trend-wrap.is-drawn .trend-callout {
+  animation: fade-in 0.4s ease-out var(--callout-delay) both;
+}
+.trend-wrap.is-drawn .callout-arrow {
+  animation: trend-draw 0.5s ease-out var(--callout-delay) both;
+}
+@keyframes trend-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.callout-arrow {
+  fill: none;
+  stroke: #345f47;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+}
+.callout-text {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.3px;
+  fill: #345f47;
+  paint-order: stroke;
+  stroke: #faf9f2;
+  stroke-width: 3px;
+}
+.trend-rat {
+  color: var(--ink);
+  --rat-detail: #faf9f2;
+  pointer-events: none;
+  transition: transform 0.2s var(--ease-out);
+}
+
+/* Rat Race */
+.race-fill {
+  transition-property: width;
+}
+.race-runner {
+  transition-property: left;
+}
+.is-racing .race-rat {
+  animation: scurry 0.16s ease-in-out infinite alternate;
+}
+.is-racing .race-rat .rat-tail {
+  animation: tail-twitch 0.32s ease-in-out infinite;
+}
+@keyframes scurry {
+  to {
+    transform: translateY(-2.5px) rotate(-4deg);
+  }
+}
+.race-flag {
+  position: absolute;
+  left: calc(100% + 4px);
+  top: 6px;
+  width: 12px;
+  height: 15px;
+  border-left: 1.5px solid var(--ink);
+}
+.race-flag::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 7px;
+  background: conic-gradient(
+      var(--ink) 25%,
+      #faf9f2 0 50%,
+      var(--ink) 0 75%,
+      #faf9f2 0
+    )
+    0 0 / 5px 3.5px;
+}
+.rat-race:not(.has-started) .race-flag,
+.is-racing .race-flag {
+  opacity: 0;
+}
+.has-started:not(.is-racing) .race-flag {
+  transform-origin: 0 100%;
+  animation: flag-up 0.45s var(--ease-spring) both;
+}
+.has-started:not(.is-racing) .race-leader .race-rat {
+  animation: happy-rat 0.5s ease-in-out 2;
+}
+@keyframes flag-up {
+  from {
+    opacity: 0;
+    transform: scaleY(0.2);
+  }
+}
+
+/* Heatmap: a wave through the years, then a column for the same month. */
+.heatmap-grid.is-waiting .heatmap-cell {
+  opacity: 0;
+  transform: scale(0.4);
+}
+.heatmap-grid.is-revealed .heatmap-cell {
+  animation: cell-pop 0.45s var(--ease-spring) var(--wave) backwards;
+}
+@keyframes cell-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+.heatmap-cell {
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+.heatmap-grid.has-column .heatmap-cell:not(.same-month) {
+  opacity: 0.35;
+}
+.heatmap-cell.same-month {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 0 #263c2e33;
+}
