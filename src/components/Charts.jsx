@@ -57,7 +57,13 @@ export function Trend({ months, borough, record }) {
   const shownSeries = useTween(series, { duration: 650, enabled: motion });
   const values =
     shownSeries.length === months.length ? shownSeries : series;
-  const shownMax = useTween(max(months, (r) => r.count) || 1, {
+  // Round the destination axis once and tween toward it. Rounding ("nice")
+  // the tweened value every frame made the axis snap between scales and the
+  // line jump each time it did.
+  const target = scaleLinear()
+    .domain([0, max(months, (r) => r.count) || 1])
+    .nice(4);
+  const shownTop = useTween(target.domain()[1], {
     duration: 650,
     enabled: motion,
   });
@@ -66,9 +72,14 @@ export function Trend({ months, borough, record }) {
     .domain(months.map((r) => r.month))
     .range([left, width - right]);
   const y = scaleLinear()
-    .domain([0, shownMax])
-    .nice(4)
+    .domain([0, shownTop])
     .range([height - bottom, top]);
+  // Final tick labels throughout; they glide into place as the axis settles.
+  // Labels too close to the one below stay hidden until there is room.
+  const ticksY = [];
+  for (const t of target.ticks(4))
+    if (t <= shownTop * 1.001 && (!ticksY.length || y(ticksY.at(-1)) - y(t) >= 14))
+      ticksY.push(t);
   const shape = line()
     .x((r) => x(r.month))
     .y((r) => y(r.count))
@@ -147,7 +158,7 @@ export function Trend({ months, borough, record }) {
             <stop offset="1" stopColor="#799e70" stopOpacity=".02" />
           </linearGradient>
         </defs>
-        {y.ticks(4).map((t) => (
+        {ticksY.map((t) => (
           <g key={t}>
             <line
               x1={left}
