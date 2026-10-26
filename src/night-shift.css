@@ -726,3 +726,7 @@ html[data-theme="night"] .rat-o-meter svg {
 html[data-theme="night"] .rat-o-meter .is-on {
   color: var(--lime);
 }
+html[data-theme="night"] .rat-lore {
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  filter: sepia(0.15) brightness(0.92);
+}

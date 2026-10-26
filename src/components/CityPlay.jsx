@@ -9,6 +9,7 @@ import {
 import Rat from "./Rat.jsx";
 import { LineBullet, STOPS, StationSign, TransferLink, jumpTo } from "./Wayfinding.jsx";
 import { Litter } from "../night/Litter.jsx";
+import RatLore from "./RatLore.jsx";
 import {
   monthLabel,
   monthOffset,
@@ -536,6 +537,7 @@ export function CityCorner({ data, details }) {
           </span>
         </div>
       </div>
+      <RatLore data={data} />
       <div className="souvenir-ticket">
         <div>
           <span className="eyebrow">YOUR SOUVENIR / SAVED ON THIS DEVICE</span>

@@ -189,3 +189,16 @@ test("motion controls stop playback, persist, and follow system preferences", as
     page.getByRole("list", { name: "Collected stamps" }),
   ).toContainText("Secret express: undiscovered");
 });
+
+test("the Rat Gazette cycles Wikipedia lore with pinned, section-level sources", async ({ page }) => {
+  await page.goto("./");
+  const gazette = page.getByRole("article", { name: "Rat lore from Wikipedia" });
+  await gazette.scrollIntoViewIfNeeded();
+  const headline = gazette.locator("h3");
+  const first = await headline.innerText();
+  await expect(gazette.getByRole("link", { name: /From Wikipedia/ })).toHaveAttribute("href", /oldid=\d+#Species$/);
+  await gazette.getByRole("button", { name: "Next clipping ↻" }).click();
+  await expect(headline).not.toHaveText(first);
+  await expect(gazette.getByRole("link", { name: /From Wikipedia/ })).toHaveAttribute("href", /oldid=\d+#Genetics$/);
+  await expect(gazette).toContainText("CC BY-SA 4.0");
+});
