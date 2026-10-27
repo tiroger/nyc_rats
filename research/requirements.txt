@@ -1,0 +1,8 @@
+marimo>=0.25
+pandas>=2.2
+numpy>=2.0
+scipy>=1.13
+statsmodels>=0.14
+altair>=5.4
+pyarrow>=17
+requests>=2.32

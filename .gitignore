@@ -9,3 +9,7 @@ test-results/
 .env.*
 !.env.example
 .DS_Store
+research/data/
+research/__marimo__/
+__pycache__/
+.pytest_cache/
