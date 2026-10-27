@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import Rat from "./components/Rat.jsx";
 import AtlasMap from "./components/AtlasMap.jsx";
 import Insights from "./components/Insights.jsx";
@@ -9,6 +9,12 @@ import {
   CountdownBoard,
   StationSign,
 } from "./components/Wayfinding.jsx";
+import { Litter, NightWindows } from "./night/Litter.jsx";
+import Species from "./components/Species.jsx";
+
+// Night shift extras load only when someone turns the lights off.
+const NightLayer = lazy(() => import("./night/NightLayer.jsx"));
+const Curbside = lazy(() => import("./night/Curbside.jsx"));
 import {
   CityCorner,
   HeroRat,
@@ -51,7 +57,7 @@ const rangeLabel = ([start, end]) =>
     : `${monthLabel(start, true)} — ${monthLabel(end, true)}`;
 
 export default function App() {
-  const { motion } = useCityPlay();
+  const { motion, night } = useCityPlay();
   const [resource, setResource] = useState({ loading: true });
   const [borough, setBorough] = useState("All NYC");
   const [preset, setPreset] = useState("12m");
@@ -407,8 +413,10 @@ export default function App() {
         >
           <div className="hero-copy">
             <div className="eyebrow">
-              <span className="live-dot" /> FIVE BOROUGHS. ONE VERY PERSISTENT
-              NEIGHBOR.
+              <span className="live-dot" />{" "}
+              {night
+                ? "THE CITY NEVER SLEEPS. NEITHER DO THEY."
+                : "FIVE BOROUGHS. ONE VERY PERSISTENT NEIGHBOR."}
             </div>
             <h1 id="hero-title">
               New York,
@@ -438,6 +446,7 @@ export default function App() {
             <svg viewBox="0 0 440 220" className="skyline" aria-hidden="true">
               <path d="M5 200V150H35V105H51V68H65V105H81V200H95V134H123V161H142V115H159V76H174V115H190V200H201V99H223V47H230V12H234V47H243V99H264V200H280V155H304V125H330V178H347V103H368V145H388V130H415V200" />
               <path d="M5 200H430" />
+              <NightWindows />
             </svg>
             <HeroRat />
             <span className="rat-stamp mono">
@@ -448,6 +457,7 @@ export default function App() {
             <span className="art-caption mono">
               RATTUS NORVEGICUS / UNOFFICIAL NEW YORKER
             </span>
+            <Litter spot="hero" />
           </div>
         </section>
         <CountdownBoard stale={stale} through={dateLabel(data.coverage.to)} />
@@ -785,6 +795,7 @@ export default function App() {
               <p className="download-note">
                 CSV contains resident reports for the selected period.
               </p>
+              <Litter spot="map" />
             </aside>
           </div>
           <div className="chart-layout">
@@ -824,6 +835,7 @@ export default function App() {
               <p className="chart-note">
                 All boroughs, same period. Select a row to filter the atlas.
               </p>
+              <Litter spot="race" />
             </article>
           </div>
         </section>
@@ -906,8 +918,14 @@ export default function App() {
               </a>
             </aside>
           </div>
+          <Species data={data} />
         </section>
         <CityCorner data={data} details={details} />
+        {night && (
+          <Suspense fallback={null}>
+            <Curbside />
+          </Suspense>
+        )}
         <section
           className="methodology shell"
           id="methodology"
@@ -1006,6 +1024,7 @@ export default function App() {
           </div>
         </section>
         <section className="closing shell">
+          <Litter spot="closing" />
           <Rat />
           <div>
             <h2>Seen something scurrying?</h2>
@@ -1020,7 +1039,13 @@ export default function App() {
           </a>
         </section>
       </main>
+      {night && (
+        <Suspense fallback={null}>
+          <NightLayer />
+        </Suspense>
+      )}
       <footer className="site-footer shell">
+        <Litter spot="footer" />
         <a href={import.meta.env.BASE_URL} className="wordmark">
           <span>ratlas.</span>
         </a>

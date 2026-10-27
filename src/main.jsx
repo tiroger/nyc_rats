@@ -13,6 +13,16 @@ import "./insights.css";
 import "./city-play.css";
 import "./motion.css";
 import "./wayfinding.css";
+import "./night-shift.css";
+import "./species.css";
+
+// Apply a remembered Night shift before first paint, so it doesn't flash.
+try {
+  if (JSON.parse(localStorage.getItem("ratlas-night")) === true)
+    document.documentElement.dataset.theme = "night";
+} catch {
+  /* Storage is optional. */
+}
 
 class ErrorBoundary extends React.Component {
   state = { failed: false };

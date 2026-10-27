@@ -1,0 +1,289 @@
+/* Know your neighbor: a field-guide specimen sheet for Rattus norvegicus. */
+.species {
+  margin-top: 34px;
+  padding: 30px 32px 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background-color: #fbfaf4;
+  background-image:
+    linear-gradient(rgba(38, 60, 46, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(38, 60, 46, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.species-head h3 {
+  font-size: 40px;
+  letter-spacing: -1.4px;
+  margin: 8px 0 6px;
+  font-weight: 600;
+}
+.species-head p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+  max-width: 620px;
+  line-height: 1.6;
+}
+.species-sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 36px;
+  align-items: center;
+  margin-top: 18px;
+}
+.anatomy-figure {
+  position: relative;
+  aspect-ratio: 240 / 140;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.anatomy-rat {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--ink);
+  --rat-detail: #fbfaf4;
+}
+.anatomy-pin {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: #fbfaf4;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(38, 60, 46, 0.18);
+  transition:
+    transform 0.2s var(--ease-spring, ease),
+    background-color 0.2s;
+}
+.anatomy-pin::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--lime);
+  opacity: 0;
+  animation: pin-ping 2.4s ease-out infinite;
+}
+.anatomy-pin:hover,
+.anatomy-pin:focus-visible {
+  transform: scale(1.12);
+}
+.anatomy-pin[aria-pressed="true"] {
+  background: var(--lime);
+  transform: scale(1.18);
+}
+.anatomy-pin[aria-pressed="true"]::after {
+  animation: none;
+}
+@keyframes pin-ping {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.8);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+.anatomy-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 12px 0 0;
+}
+.anatomy-note {
+  background: var(--ink);
+  color: #f5f3e9;
+  border-radius: 8px;
+  padding: 22px 24px;
+  min-height: 250px;
+  animation: note-in 0.3s var(--ease-out, ease-out);
+}
+.anatomy-note > span {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--lime);
+}
+.anatomy-note h4 {
+  font-size: 26px;
+  line-height: 1.15;
+  letter-spacing: -0.6px;
+  margin: 10px 0 10px;
+}
+.anatomy-note p {
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 0 0 14px;
+  color: #e3e4d6;
+}
+.anatomy-note a {
+  font-size: 12px;
+  color: var(--lime);
+}
+@keyframes note-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.species-stats {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+  margin: 28px 0 0;
+}
+.species-stats > div {
+  border-top: 2px solid var(--ink);
+  padding-top: 10px;
+}
+.species-stats dd {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+  order: -1;
+}
+.species-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.species-stats dt {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.species-stats .is-data {
+  border-top-color: #8a6a2b;
+}
+.species-swing {
+  margin: 18px 0 0;
+  padding: 12px 16px;
+  background: rgba(38, 60, 46, 0.06);
+  border-left: 4px solid var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.species-swing b {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  margin-right: 8px;
+}
+.timeline-title {
+  font-size: 20px;
+  margin: 30px 0 4px;
+  letter-spacing: -0.4px;
+}
+/* The origin story, drawn as a line with stations. */
+.species-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 18px 2px 14px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  position: relative;
+  /* Fade the far edge so it reads as "more this way". */
+  mask-image: linear-gradient(90deg, #000 calc(100% - 60px), transparent);
+}
+.species-timeline li {
+  position: relative;
+  scroll-snap-align: start;
+  padding-top: 26px;
+}
+.species-timeline li::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: -18px;
+  height: 6px;
+  background: #8a5a2b;
+  border-radius: 3px;
+}
+.species-timeline li:last-child::before {
+  right: 0;
+}
+.species-timeline .station {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fbfaf4;
+  border: 3px solid var(--ink);
+}
+.species-timeline .when {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  color: #8a5a2b;
+  font-weight: 700;
+}
+.species-timeline b {
+  display: block;
+  font-size: 17px;
+  margin: 6px 0 4px;
+}
+.species-timeline p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+.species-timeline a {
+  font-size: 11px;
+  color: var(--muted);
+}
+.species-credits {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.species-credits a {
+  color: inherit;
+}
+@media (max-width: 1150px) {
+  .species-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .species {
+    padding: 22px 18px 18px;
+  }
+  .species-head h3 {
+    font-size: 30px;
+  }
+  .species-sheet {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .anatomy-pin {
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    font-size: 12px;
+  }
+  .anatomy-note {
+    min-height: 0;
+  }
+  .species-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

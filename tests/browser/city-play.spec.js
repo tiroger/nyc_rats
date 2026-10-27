@@ -189,3 +189,31 @@ test("motion controls stop playback, persist, and follow system preferences", as
     page.getByRole("list", { name: "Collected stamps" }),
   ).toContainText("Secret express: undiscovered");
 });
+
+test("the Rat Gazette cycles Wikipedia lore with pinned, section-level sources", async ({ page }) => {
+  await page.goto("./");
+  const gazette = page.getByRole("article", { name: "Rat lore from Wikipedia" });
+  await gazette.scrollIntoViewIfNeeded();
+  const headline = gazette.locator("h3");
+  const first = await headline.innerText();
+  await expect(gazette.getByRole("link", { name: /From Wikipedia/ })).toHaveAttribute("href", /oldid=\d+#Species$/);
+  await gazette.getByRole("button", { name: "Next clipping ↻" }).click();
+  await expect(headline).not.toHaveText(first);
+  await expect(gazette.getByRole("link", { name: /From Wikipedia/ })).toHaveAttribute("href", /oldid=\d+#Genetics$/);
+  await expect(gazette).toContainText("CC BY-SA 4.0");
+});
+
+test("the species sheet explains each hotspot with a pinned source", async ({ page }) => {
+  await page.goto("./");
+  const sheet = page.locator("#species");
+  await sheet.scrollIntoViewIfNeeded();
+  await expect(sheet.getByRole("heading", { name: "Rattus norvegicus" })).toBeVisible();
+  const ear = sheet.getByRole("button", { name: "3. Ear" });
+  await ear.click();
+  await expect(ear).toHaveAttribute("aria-pressed", "true");
+  await expect(sheet.locator(".anatomy-note h4")).toHaveText("They laugh in ultrasound.");
+  await expect(sheet.locator(".anatomy-note a")).toHaveAttribute("href", /oldid=\d+#Communication$/);
+  await expect(sheet).toContainText("OUR DATA");
+  await expect(sheet.getByRole("list", { name: "Origin timeline of the brown rat" }).getByRole("listitem")).toHaveCount(8);
+  await expect(sheet).toContainText("doi:10.1093/af/vfab020");
+});

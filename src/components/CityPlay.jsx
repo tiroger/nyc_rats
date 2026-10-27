@@ -7,7 +7,9 @@ import {
   useState,
 } from "react";
 import Rat from "./Rat.jsx";
-import { LineBullet, STOPS, StationSign, TransferLink } from "./Wayfinding.jsx";
+import { LineBullet, STOPS, StationSign, TransferLink, jumpTo } from "./Wayfinding.jsx";
+import { Litter } from "../night/Litter.jsx";
+import RatLore from "./RatLore.jsx";
 import {
   monthLabel,
   monthOffset,
@@ -47,6 +49,11 @@ export function CityProvider({ children }) {
   const [enabled, setEnabled] = useState(
     () => readStored("ratlas-motion", true) !== false,
   );
+  // Night shift: the whole atlas after dark. Off unless the visitor turns it on.
+  const [night, setNightState] = useState(
+    () => readStored("ratlas-night", false) === true,
+  );
+  const [sound, setSound] = useState(() => readStored("ratlas-sound", false) === true);
   const [found, setFound] = useState(() => {
     const stored = readStored("ratlas-secrets", []);
     return Array.isArray(stored)
@@ -68,7 +75,7 @@ export function CityProvider({ children }) {
         express:
           "Secret express! The Rat Local is making an unscheduled joyride.",
         night:
-          "Night-shift regular! The map just clocked in after dark. The locals glow.",
+          "Night-shift regular! The city just clocked in after dark. Mind the garbage.",
       }[key],
     });
     if (key === "express") setExpress((previous) => previous + 1);
@@ -90,6 +97,20 @@ export function CityProvider({ children }) {
       /* Storage is optional. */
     }
   }, [enabled, motion]);
+  useEffect(() => {
+    document.documentElement.dataset.theme = night ? "night" : "day";
+    try {
+      localStorage.setItem("ratlas-night", JSON.stringify(night));
+      localStorage.setItem("ratlas-sound", JSON.stringify(sound));
+    } catch {
+      /* Storage is optional. */
+    }
+  }, [night, sound]);
+  const setNight = (value) => {
+    const next = typeof value === "function" ? value(night) : value;
+    if (next && !night) discoverRef.current("night");
+    setNightState(next);
+  };
   useEffect(() => {
     try {
       localStorage.setItem("ratlas-secrets", JSON.stringify(found));
@@ -133,7 +154,19 @@ export function CityProvider({ children }) {
   }, []);
   return (
     <CityContext.Provider
-      value={{ motion, reduced, enabled, setEnabled, found, discover, express }}
+      value={{
+        motion,
+        reduced,
+        enabled,
+        setEnabled,
+        found,
+        discover,
+        express,
+        night,
+        setNight,
+        sound,
+        setSound,
+      }}
     >
       {children}
       {toast && (
@@ -278,6 +311,7 @@ export function SubwayNav() {
               <a
                 href={`#${stop.id}`}
                 aria-current={active === index ? "location" : undefined}
+                onClick={(event) => jumpTo(event, stop.id)}
               >
                 <span className="station-dot">
                   <LineBullet id={stop.id} size="xs" />
@@ -420,6 +454,7 @@ export function CityCorner({ data, details }) {
         <div className="sewer-club">
           <span className="eyebrow">SOMETHING’S HAPPENING UNDER HERE.</span>
           <div className={`manhole-scene ${open ? "is-open" : ""}`}>
+            <Litter spot="manhole" />
             <div
               className="sewer-residents"
               id="sewer-residents"
@@ -502,6 +537,7 @@ export function CityCorner({ data, details }) {
           </span>
         </div>
       </div>
+      <RatLore data={data} />
       <div className="souvenir-ticket">
         <div>
           <span className="eyebrow">YOUR SOUVENIR / SAVED ON THIS DEVICE</span>

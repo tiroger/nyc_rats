@@ -248,28 +248,29 @@
   pointer-events: none;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  min-width: 172px;
-  max-width: 230px;
-  padding: 11px 13px 12px;
+  gap: 7px;
+  min-width: 240px;
+  max-width: 290px;
+  padding: 15px 17px 16px;
   background: #faf9f2;
   border: 1px solid #adbba1;
-  border-radius: 5px;
-  box-shadow: 0 6px 22px #263c2e1f;
-  font-size: 11px;
+  border-radius: 7px;
+  box-shadow: 0 10px 30px #263c2e26;
+  font-size: 13px;
+  line-height: 1.35;
   --x: -50%;
-  --y: calc(-100% - 16px);
+  --y: calc(-100% - 18px);
   transform: translate(var(--x), var(--y));
   animation: hover-in 0.18s var(--ease-out);
 }
 .hover-card.below {
-  --y: 16px;
+  --y: 18px;
 }
 .hover-card.align-start {
-  --x: -24px;
+  --x: -28px;
 }
 .hover-card.align-end {
-  --x: calc(-100% + 24px);
+  --x: calc(-100% + 28px);
 }
 @keyframes hover-in {
   from {
@@ -278,58 +279,61 @@
   }
 }
 .hover-card .eyebrow {
-  font-size: 8px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: 0.8px;
 }
 .hover-card strong {
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: -0.3px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  line-height: 1.15;
 }
 .hover-card b {
-  font-size: 14px;
+  font-size: 18px;
 }
 .hover-rank {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted);
 }
 .hover-trail,
 .hover-meter {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding-top: 5px;
+  gap: 6px;
+  padding-top: 9px;
   border-top: 1px solid var(--line);
 }
 .hover-trail small,
 .hover-meter small {
-  font-size: 8px;
+  font-size: 11px;
   color: var(--muted);
 }
 .hover-spark {
+  display: block;
   width: 100%;
-  height: 30px;
+  height: auto;
   overflow: visible;
 }
 .hover-spark polyline {
   fill: none;
   stroke: #345f47;
-  stroke-width: 1.6;
+  stroke-width: 2;
   stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
 }
 .hover-spark circle {
   fill: var(--lime);
   stroke: var(--ink);
-  stroke-width: 1.2;
+  stroke-width: 1.4;
 }
 .rat-o-meter {
   display: flex;
-  gap: 3px;
-  color: #ccd3c1;
+  gap: 6px;
+  color: #d3d9c8;
 }
 .rat-o-meter svg {
-  width: 21px;
-  height: 12px;
+  width: 32px;
+  height: 19px;
   --rat-detail: #faf9f2;
 }
 .rat-o-meter .is-on {
@@ -389,27 +393,18 @@
 .night-shift .zip-shape {
   stroke: #4a6a57;
 }
+/* A radial-gradient fill reads as a glow and costs nothing extra to paint.
+   An SVG blur filter, or any animation inside the map's SVG, makes the
+   browser redraw the whole map every frame. */
 .night-shift .report-bubble,
 .night-shift .bubble-ghost {
-  fill: var(--lime);
+  fill: url(#night-bubble);
   stroke: #f4ffc4;
   stroke-width: 0.5;
+  stroke-opacity: 0.6;
 }
-.night-shift .report-bubble {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: breathe var(--breathe, 3s) ease-in-out var(--breathe-delay, 0s)
-    infinite;
-}
-.night-shift .bubble-layer {
-  filter: url(#night-glow);
-}
-@keyframes breathe {
-  50% {
-    transform: scale(1.12);
-    fill-opacity: 0.8;
-  }
-}
+
+
 .night-shift .map-label {
   fill: var(--lime);
   stroke: #121d17;

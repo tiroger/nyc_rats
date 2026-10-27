@@ -132,9 +132,8 @@ export default function AtlasMap({
   quiet = false,
   trail,
 }) {
-  const { motion, discover } = useCityPlay();
+  const { motion, night, setNight } = useCityPlay();
   const [mode, setMode] = useState("bubbles");
-  const [night, setNight] = useState(false);
   const [transform, setTransform] = useState(zoomIdentity);
   const [hover, setHover] = useState(null);
   const [run, setRun] = useState(null);
@@ -383,10 +382,8 @@ export default function AtlasMap({
   const changeZoom = (factor) =>
     select(svgRef.current).call(zoomRef.current.scaleBy, factor);
   const choose = (zip) => setSelectedZip(selectedZip === zip ? null : zip);
-  const toggleNight = () => {
-    setNight((value) => !value);
-    if (!night) discover("night");
-  };
+  // The compass is a shortcut to the site-wide Night shift.
+  const toggleNight = () => setNight((value) => !value);
   const showHover = (zip) => (event) => {
     if (event.type === "pointerenter" && event.pointerType !== "mouse") return;
     if (byZip.has(zip) && points.has(zip)) setHover(zip);
@@ -479,13 +476,11 @@ export default function AtlasMap({
             >
               <circle cx="1" cy="1" r=".65" className="water-dot" />
             </pattern>
-            <filter id="night-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+            <radialGradient id="night-bubble">
+              <stop offset="0" stopColor="#f4ffc4" />
+              <stop offset="0.55" stopColor="#dcf080" />
+              <stop offset="1" stopColor="#dcf080" stopOpacity="0.15" />
+            </radialGradient>
           </defs>
           <rect width={W} height={H} fill="url(#water)" />
           {frame !== null && (
@@ -573,10 +568,6 @@ export default function AtlasMap({
                         r={r}
                         fill={COLORS[row.borough]}
                         className={`report-bubble ${selectedZip === row.zip ? "bubble-selected" : ""}`}
-                        style={{
-                          "--breathe": `${2.2 + (r * scale) / 10}s`,
-                          "--breathe-delay": `${-(Number(row.zip) % 17) / 5}s`,
-                        }}
                         role="button"
                         tabIndex={0}
                         onClick={() => choose(row.zip)}
@@ -720,7 +711,7 @@ export default function AtlasMap({
         )}
         {hoverRow && hoverAt && (
           <div
-            className={`hover-card ${hoverAt.y < 230 ? "below" : "above"} ${hoverAt.x > hoverAt.width - 130 ? "align-end" : hoverAt.x < 130 ? "align-start" : ""}`}
+            className={`hover-card ${hoverAt.y < 300 ? "below" : "above"} ${hoverAt.x > hoverAt.width - 160 ? "align-end" : hoverAt.x < 160 ? "align-start" : ""}`}
             style={{ left: hoverAt.x, top: hoverAt.y }}
             aria-hidden="true"
             data-testid="map-hover-card"
