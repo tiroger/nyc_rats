@@ -202,3 +202,18 @@ test("the Rat Gazette cycles Wikipedia lore with pinned, section-level sources",
   await expect(gazette.getByRole("link", { name: /From Wikipedia/ })).toHaveAttribute("href", /oldid=\d+#Genetics$/);
   await expect(gazette).toContainText("CC BY-SA 4.0");
 });
+
+test("the species sheet explains each hotspot with a pinned source", async ({ page }) => {
+  await page.goto("./");
+  const sheet = page.locator("#species");
+  await sheet.scrollIntoViewIfNeeded();
+  await expect(sheet.getByRole("heading", { name: "Rattus norvegicus" })).toBeVisible();
+  const ear = sheet.getByRole("button", { name: "3. Ear" });
+  await ear.click();
+  await expect(ear).toHaveAttribute("aria-pressed", "true");
+  await expect(sheet.locator(".anatomy-note h4")).toHaveText("They laugh in ultrasound.");
+  await expect(sheet.locator(".anatomy-note a")).toHaveAttribute("href", /oldid=\d+#Communication$/);
+  await expect(sheet).toContainText("OUR DATA");
+  await expect(sheet.getByRole("list", { name: "Origin timeline of the brown rat" }).getByRole("listitem")).toHaveCount(8);
+  await expect(sheet).toContainText("doi:10.1093/af/vfab020");
+});

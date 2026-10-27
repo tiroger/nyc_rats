@@ -10,6 +10,7 @@ import {
   StationSign,
 } from "./components/Wayfinding.jsx";
 import { Litter, NightWindows } from "./night/Litter.jsx";
+import Species from "./components/Species.jsx";
 
 // Night shift extras load only when someone turns the lights off.
 const NightLayer = lazy(() => import("./night/NightLayer.jsx"));
@@ -917,6 +918,7 @@ export default function App() {
               </a>
             </aside>
           </div>
+          <Species data={data} />
         </section>
         <CityCorner data={data} details={details} />
         {night && (

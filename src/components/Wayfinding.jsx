@@ -75,7 +75,10 @@ export const STOPS = [
   {
     id: "field-notes",
     label: "Field notes",
-    transfers: [{ href: "season", label: "Rat season" }],
+    transfers: [
+      { href: "season", label: "Rat season" },
+      { href: "species", label: "The species" },
+    ],
   },
   { id: "city-corner", label: "Local stop" },
   { id: "methodology", label: "Field guide" },
