@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { staleReplica } from "../scripts/lib/socrata.mjs";
+import { query, retry, staleReplica } from "../scripts/lib/socrata.mjs";
 
 const soda = (served, truth = served, outOfDate = "false") =>
   new Headers({
@@ -40,4 +40,50 @@ test("a dataset update mid-run is accepted and becomes the new floor", () => {
 
 test("responses without freshness headers are not rejected", () => {
   assert.equal(staleReplica("t-bare", new Headers()), false);
+});
+
+// Replays canned responses through query() with no real waiting.
+async function replay(responses) {
+  const realFetch = globalThis.fetch,
+    realWarn = console.warn,
+    saved = { ...retry };
+  Object.assign(retry, { staleDelayMs: 0, backoffMs: 0 });
+  console.warn = () => {};
+  let calls = 0;
+  globalThis.fetch = async () => {
+    const r = responses[Math.min(calls++, responses.length - 1)];
+    return new Response(JSON.stringify(r.body ?? [{ n: "1" }]), {
+      status: r.status ?? 200,
+      headers: r.stale ? { "x-soda2-data-out-of-date": "true" } : {},
+    });
+  };
+  try {
+    return { result: await query(`t-replay-${Math.random()}`, {}), calls };
+  } catch (error) {
+    return { error, calls };
+  } finally {
+    globalThis.fetch = realFetch;
+    console.warn = realWarn;
+    Object.assign(retry, saved);
+  }
+}
+
+test("stale answers are retried on their own budget, not the outage one", async () => {
+  // Six stale answers in a row would have exhausted the old four attempts.
+  const stale = Array.from({ length: 6 }, () => ({ stale: true }));
+  const { result, calls } = await replay([{ status: 503 }, ...stale, { status: 429 }, {}]);
+  assert.deepEqual(result, [{ n: "1" }]);
+  assert.equal(calls, 9);
+});
+
+test("a source that stays stale fails with a clear message", async () => {
+  const { error, calls } = await replay([{ stale: true }]);
+  assert.match(error.message, /kept answering .* from a stale replica/);
+  assert.equal(calls, retry.stale + 1);
+});
+
+test("outages still give up after the usual retries", async () => {
+  const { error, calls } = await replay([{ status: 503 }]);
+  assert.match(error.message, /returned 503/);
+  assert.equal(calls, retry.failures + 1);
 });
