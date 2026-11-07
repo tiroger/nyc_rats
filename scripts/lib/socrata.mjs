@@ -8,6 +8,23 @@ export function sourceWhere(id) {
   return `complaint_type='Rodent' AND descriptor='Rat Sighting' AND ${period}`;
 }
 
+// NYC Open Data sometimes answers from a lagging replica (seen Nov 2026: a
+// count two days old between current ones). Mixing replicas breaks every
+// reconciliation check, so reject answers older than the newest one seen.
+const newest = new Map();
+export function staleReplica(id, headers) {
+  if (headers.get("x-soda2-data-out-of-date") === "true") return true;
+  const time = (name) => Date.parse(headers.get(name) ?? "") || 0;
+  const served =
+    time("x-soda2-secondary-last-modified") || time("last-modified");
+  const known = Math.max(
+    newest.get(id) || 0,
+    time("x-soda2-truth-last-modified"),
+  );
+  newest.set(id, Math.max(known, served));
+  return served > 0 && served < known;
+}
+
 export async function query(id, params, metadata = false) {
   const url = metadata
     ? `https://data.cityofnewyork.us/api/views/${id}.json`
@@ -28,6 +45,8 @@ export async function query(id, params, metadata = false) {
           response.status === 408;
         throw error;
       }
+      if (!metadata && staleReplica(id, response.headers))
+        throw new Error("NYC Open Data answered from a stale replica");
       return await response.json();
     } catch (error) {
       if (error.retryable === false || attempt === 3) throw error;
