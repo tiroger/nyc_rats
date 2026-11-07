@@ -1,10 +1,27 @@
 import { readFile, writeFile, rename, mkdir } from "node:fs/promises";
+import { setTimeout as delay } from "node:timers/promises";
 import { BOROUGHS, SOURCE_IDS, validateSnapshot } from "../src/lib/data.mjs";
 import { query, sourceWhere } from "./lib/socrata.mjs";
 
 const output = new URL("../public/data/sightings.json", import.meta.url);
 
+class Unreconciled extends Error {}
+
+// A source that doesn't reconcile is re-fetched whole, so a replica or update
+// change mid-fetch costs a retry rather than the day's refresh.
 async function fetchSource(id) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fetchSourceOnce(id);
+    } catch (error) {
+      if (!(error instanceof Unreconciled) || attempt === 3) throw error;
+      console.warn(`${error.message}; re-fetching (${attempt}/2)`);
+      await delay(30_000 * attempt);
+    }
+  }
+}
+
+async function fetchSourceOnce(id) {
   // Fixed source periods prevent overlaps if the City's archive arrangement changes.
   const where = sourceWhere(id);
   const [metadata, totals] = await Promise.all([
@@ -17,7 +34,7 @@ async function fetchSource(id) {
   ]);
   const rows = [];
   // Explicit pagination and a total order avoid SODA's default truncated responses.
-  const pageSize = 10_000;
+  const pageSize = 50_000;
   for (let offset = 0; ; offset += pageSize) {
     const page = await query(id, {
       $select:
@@ -33,12 +50,10 @@ async function fetchSource(id) {
     if (page.length < pageSize) break;
   }
   const expected = Number(totals[0]?.reports);
-  if (
-    !expected ||
-    rows.reduce((sum, r) => sum + Number(r.reports), 0) !== expected
-  )
-    throw new Error(
-      `Source ${id} changed during pagination or is incomplete; keeping the previous snapshot`,
+  const summed = rows.reduce((sum, r) => sum + Number(r.reports), 0);
+  if (!expected || summed !== expected)
+    throw new Unreconciled(
+      `Source ${id} changed during pagination or is incomplete (count ${expected}, groups ${summed}); keeping the previous snapshot`,
     );
   console.log(
     `${metadata.name}: ${expected.toLocaleString()} reports, ${rows.length.toLocaleString()} aggregates`,
