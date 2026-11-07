@@ -25,11 +25,18 @@ export function staleReplica(id, headers) {
   return served > 0 && served < known;
 }
 
+// Replicas answer at random (about half were stale on Nov 7, 2026), so a
+// stale answer gets its own quick retries instead of using up the backoff
+// meant for outages.
+export const retry = { stale: 8, staleDelayMs: 3000, failures: 3, backoffMs: 2000 };
+
 export async function query(id, params, metadata = false) {
   const url = metadata
     ? `https://data.cityofnewyork.us/api/views/${id}.json`
     : `https://data.cityofnewyork.us/resource/${id}.json?${new URLSearchParams(params)}`;
-  for (let attempt = 0; attempt < 4; attempt++) {
+  let failures = 0,
+    stale = 0;
+  for (;;) {
     try {
       const response = await fetch(url, {
         headers: process.env.SOCRATA_APP_TOKEN
@@ -45,13 +52,23 @@ export async function query(id, params, metadata = false) {
           response.status === 408;
         throw error;
       }
-      if (!metadata && staleReplica(id, response.headers))
-        throw new Error("NYC Open Data answered from a stale replica");
+      if (!metadata && staleReplica(id, response.headers)) {
+        if (++stale > retry.stale) {
+          const error = new Error(
+            `NYC Open Data kept answering ${id} from a stale replica`,
+          );
+          error.retryable = false;
+          throw error;
+        }
+        console.warn(`Retrying ${id} (stale replica ${stale}/${retry.stale})`);
+        await delay(retry.staleDelayMs);
+        continue;
+      }
       return await response.json();
     } catch (error) {
-      if (error.retryable === false || attempt === 3) throw error;
-      console.warn(`Retrying ${id} (${attempt + 1}/3): ${error.message}`);
-      await delay(2000 * 2 ** attempt);
+      if (error.retryable === false || ++failures > retry.failures) throw error;
+      console.warn(`Retrying ${id} (${failures}/${retry.failures}): ${error.message}`);
+      await delay(retry.backoffMs * 2 ** (failures - 1));
     }
   }
 }
