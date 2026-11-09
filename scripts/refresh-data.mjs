@@ -2,8 +2,16 @@ import { readFile, writeFile, rename, mkdir } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { BOROUGHS, SOURCE_IDS, validateSnapshot } from "../src/lib/data.mjs";
 import { query, sourceWhere } from "./lib/socrata.mjs";
+import { aggregateRows, apiRowsFromSnapshot } from "./lib/snapshot-rows.mjs";
 
 const output = new URL("../public/data/sightings.json", import.meta.url);
+
+let previous;
+try {
+  previous = JSON.parse(await readFile(output, "utf8"));
+} catch (error) {
+  if (error.code !== "ENOENT") throw error;
+}
 
 class Unreconciled extends Error {}
 
@@ -72,23 +80,35 @@ async function fetchSourceOnce(id) {
   };
 }
 
-const fetched = await Promise.all(SOURCE_IDS.map(fetchSource));
-const aggregates = new Map();
-for (const source of fetched)
-  for (const r of source.rows) {
-    const b = BOROUGHS.findIndex(
-      (b) => b.toUpperCase() === (r.borough || "").toUpperCase(),
-    );
-    const row = [
-      r.month.slice(0, 7),
-      b < 0 ? 5 : b,
-      r.incident_zip || "",
-      Number(r.reports),
-    ];
-    const key = JSON.stringify(row.slice(0, 3));
-    if (aggregates.has(key)) aggregates.get(key)[3] += row[3];
-    else aggregates.set(key, row);
-  }
+// The 2010-2019 archive rarely changes (last on 2025-12-24). When a source's
+// metadata says it hasn't changed since the published snapshot, which was
+// audited before it was committed, reuse that snapshot's rows for it instead
+// of querying it again. The metadata request is cheap; the queries are not.
+async function reuseSource(id) {
+  const old = previous?.sources.find((s) => s.id === id);
+  if (!old) return null;
+  const metadata = await query(id, {}, true);
+  if (new Date(metadata.rowsUpdatedAt * 1000).toISOString() !== old.updatedAt)
+    return null;
+  const rows = apiRowsFromSnapshot(previous, id);
+  if (!rows.length || rows.reduce((sum, r) => sum + Number(r.reports), 0) !== old.reports)
+    return null;
+  const months = rows.map((r) => r.month.slice(0, 7)).sort();
+  const [y, m] = months.at(-1).split("-").map(Number);
+  console.log(
+    `${old.name}: unchanged since ${old.updatedAt.slice(0, 10)}; reusing ${old.reports.toLocaleString()} published reports`,
+  );
+  return {
+    rows,
+    source: old,
+    from: `${months[0]}-01`,
+    to: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10),
+  };
+}
+
+const fetched = await Promise.all(
+  SOURCE_IDS.map(async (id) => (await reuseSource(id)) ?? fetchSource(id)),
+);
 const snapshot = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
@@ -103,19 +123,10 @@ const snapshot = {
   boroughs: BOROUGHS,
   sources: fetched.map((s) => s.source),
   totalReports: fetched.reduce((sum, s) => sum + s.source.reports, 0),
-  rows: [...aggregates.values()].sort(
-    (a, b) =>
-      a[0].localeCompare(b[0]) || a[1] - b[1] || a[2].localeCompare(b[2]),
-  ),
+  rows: aggregateRows(fetched.flatMap((s) => s.rows)),
 };
 validateSnapshot(snapshot);
 // Reject a suspiciously large loss of coverage rather than silently publishing it.
-let previous;
-try {
-  previous = JSON.parse(await readFile(output, "utf8"));
-} catch (error) {
-  if (error.code !== "ENOENT") throw error;
-}
 if (
   previous &&
   (snapshot.totalReports < previous.totalReports * 0.98 ||
