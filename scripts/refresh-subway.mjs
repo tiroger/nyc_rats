@@ -1,6 +1,6 @@
 // Builds public/geo/subway.geojson from MTA open data: every service line
 // merged into one simplified network, plus one point per station complex.
-// The network changes rarely, so this runs by hand, not in the daily refresh.
+// The network changes rarely, so this runs by hand, not in the weekly refresh.
 import { writeFile, rename } from "node:fs/promises";
 
 const LINES_ID = "s692-irgq",

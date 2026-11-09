@@ -27,8 +27,38 @@ export function staleReplica(id, headers) {
 
 // Replicas answer at random (about half were stale on Nov 7, 2026), so a
 // stale answer gets its own quick retries instead of using up the backoff
-// meant for outages.
-export const retry = { stale: 8, staleDelayMs: 3000, failures: 3, backoffMs: 2000 };
+// meant for outages. Outages and throttling (Nov 8: the audit's six parallel
+// queries drew 429s after 503s) back off 5s, 15s, 45s, then 90s.
+export const retry = {
+  stale: 8,
+  staleDelayMs: 3000,
+  failures: 5,
+  backoffMs: 5000,
+  maxBackoffMs: 90_000,
+  concurrency: 2,
+};
+
+// At most `retry.concurrency` requests in flight per process, whichever
+// script sends them. A finished request hands its slot straight to the next.
+let active = 0;
+const waiting = [];
+async function fetchText(url, init) {
+  if (active < retry.concurrency) active++;
+  else await new Promise((resolve) => waiting.push(resolve));
+  try {
+    const response = await fetch(url, init);
+    return { response, text: await response.text() };
+  } finally {
+    const next = waiting.shift();
+    if (next) next();
+    else active--;
+  }
+}
+
+function backoff(failures, error) {
+  const wait = Math.min(retry.maxBackoffMs, retry.backoffMs * 3 ** (failures - 1));
+  return Math.max(error.retryAfterMs || 0, wait * (1 + Math.random() / 4));
+}
 
 export async function query(id, params, metadata = false) {
   const url = metadata
@@ -38,7 +68,7 @@ export async function query(id, params, metadata = false) {
     stale = 0;
   for (;;) {
     try {
-      const response = await fetch(url, {
+      const { response, text } = await fetchText(url, {
         headers: process.env.SOCRATA_APP_TOKEN
           ? { "X-App-Token": process.env.SOCRATA_APP_TOKEN }
           : {},
@@ -50,6 +80,7 @@ export async function query(id, params, metadata = false) {
           response.status >= 500 ||
           response.status === 429 ||
           response.status === 408;
+        error.retryAfterMs = Number(response.headers.get("retry-after")) * 1000 || 0;
         throw error;
       }
       if (!metadata && staleReplica(id, response.headers)) {
@@ -64,11 +95,14 @@ export async function query(id, params, metadata = false) {
         await delay(retry.staleDelayMs);
         continue;
       }
-      return await response.json();
+      return JSON.parse(text);
     } catch (error) {
       if (error.retryable === false || ++failures > retry.failures) throw error;
-      console.warn(`Retrying ${id} (${failures}/${retry.failures}): ${error.message}`);
-      await delay(retry.backoffMs * 2 ** (failures - 1));
+      const wait = backoff(failures, error);
+      console.warn(
+        `Retrying ${id} in ${Math.round(wait / 1000)}s (${failures}/${retry.failures}): ${error.message}`,
+      );
+      await delay(wait);
     }
   }
 }

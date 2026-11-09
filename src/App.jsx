@@ -332,7 +332,8 @@ export default function App() {
   const top = Object.entries(summary.byBorough).sort((a, b) => b[1] - a[1])[0];
   const peak = metrics.peakMonths[0];
   const historicalPeak = historicalMetrics.peakMonths[0];
-  const stale = Date.now() - Date.parse(data.generatedAt) > 3 * 86400_000;
+  // Weekly refreshes, plus two days' grace for one failed run.
+  const stale = Date.now() - Date.parse(data.generatedAt) > 9 * 86400_000;
   const partial = end === data.coverage.to.slice(0, 7);
   const recordView =
     borough === "All NYC" &&
@@ -990,9 +991,10 @@ export default function App() {
             <details>
               <summary>How fresh is it?</summary>
               <p>
-                GitHub Actions automatically refreshes the data every day at
-                10:23 UTC (6:23 a.m. Eastern during daylight saving time; 5:23
-                a.m. Eastern during standard time). Each refresh independently
+                GitHub Actions automatically refreshes the data every Monday
+                at 10:23 UTC (6:23 a.m. Eastern during daylight saving time;
+                5:23 a.m. Eastern during standard time). The atlas counts
+                reports by month, so a weekly refresh keeps it current. Each refresh independently
                 checks monthly, borough, ZIP, and unique-request totals against
                 NYC Open Data before running tests and publishing. If a refresh
                 fails, the last successful deployment stays available. Last

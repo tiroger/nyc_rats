@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { COLORS } from "../lib/data.mjs";
+import { untilRefresh } from "../lib/schedule.mjs";
 
 // Our own wayfinding, in the spirit of the city's: bullets, lines, signs.
 // Colors and letters are the atlas's (boroughs and sections), not MTA routes.
@@ -185,16 +186,6 @@ export function StationSign({ line, eyebrow, title, titleId, intro, aside }) {
   );
 }
 
-// The daily data refresh is scheduled at 10:23 UTC (see the Pages workflow).
-function untilRefresh(now) {
-  const next = new Date(now);
-  next.setUTCHours(10, 23, 0, 0);
-  if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
-  const minutes = Math.ceil((next - now) / 60_000);
-  const hours = Math.floor(minutes / 60);
-  return hours ? `${hours} hr ${minutes % 60} min` : `${minutes} min`;
-}
-
 // The data ticker, as a platform countdown board.
 export function CountdownBoard({ stale, through }) {
   const [now, setNow] = useState(() => new Date());
@@ -210,7 +201,7 @@ export function CountdownBoard({ stale, through }) {
             R
           </span>
           <span className={`live-dot ${stale ? "stale" : ""}`} />
-          {stale ? "LAST PUBLISHED SNAPSHOT" : "REFRESHED DAILY"}
+          {stale ? "LAST PUBLISHED SNAPSHOT" : "REFRESHED WEEKLY"}
         </span>
         <span>NYC 311 · Rat-sighting reports</span>
         <span>Data through {through}</span>

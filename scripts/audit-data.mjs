@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import {
   SOURCE_IDS,
   validateSnapshot,
@@ -8,6 +9,7 @@ import {
 } from "../src/lib/data.mjs";
 import { query, sourceWhere } from "./lib/socrata.mjs";
 import { verifySourceAudit } from "./lib/audit.mjs";
+import { inSourcePeriod } from "./lib/snapshot-rows.mjs";
 
 const snapshot = JSON.parse(
   await readFile(
@@ -17,8 +19,40 @@ const snapshot = JSON.parse(
 );
 validateSnapshot(snapshot);
 
+// The snapshot committed in git passed this audit before it was committed.
+// A source whose rows and metadata are unchanged since then (in practice the
+// 2010-2019 archive) doesn't need its three heavy audit queries again.
+function committed() {
+  try {
+    return JSON.parse(
+      execFileSync("git", ["show", "HEAD:public/data/sightings.json"], {
+        encoding: "utf8",
+        maxBuffer: 256 * 1024 * 1024,
+        stdio: ["ignore", "pipe", "ignore"],
+      }),
+    );
+  } catch {
+    return null;
+  }
+}
+const audited = committed();
+async function unchangedSinceAudit(id) {
+  if (!audited) return false;
+  const now = snapshot.sources.find((s) => s.id === id),
+    then = audited.sources.find((s) => s.id === id);
+  if (JSON.stringify(now) !== JSON.stringify(then)) return false;
+  const own = (d) => JSON.stringify(d.rows.filter(([m]) => inSourcePeriod(id, m)));
+  if (own(snapshot) !== own(audited)) return false;
+  const metadata = await query(id, {}, true);
+  return new Date(metadata.rowsUpdatedAt * 1000).toISOString() === now.updatedAt;
+}
+
 await Promise.all(
   SOURCE_IDS.map(async (id) => {
+    if (await unchangedSinceAudit(id)) {
+      console.log(`${id}: unchanged since the audited snapshot in git; not re-auditing`);
+      return;
+    }
     const where = sourceWhere(id);
     const [totals, monthlyBorough, monthlyZip] = await Promise.all([
       query(id, {
