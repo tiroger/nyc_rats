@@ -24,7 +24,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # A normal refresh takes ~12 minutes; slow NYC Open Data days have hit 37,
+    # and backoff on throttling can add several more.
+    timeout-minutes: 90
     permissions:
       contents: write
       pages: read

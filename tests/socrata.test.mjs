@@ -87,3 +87,30 @@ test("outages still give up after the usual retries", async () => {
   assert.match(error.message, /returned 503/);
   assert.equal(calls, retry.failures + 1);
 });
+
+test("throttling survives a burst of 429s like the Nov 8 audit's", async () => {
+  const { result } = await replay([{ status: 503 }, { status: 429 }, { status: 429 }, { status: 429 }, {}]);
+  assert.deepEqual(result, [{ n: "1" }]);
+});
+
+test("no more than the allowed number of requests run at once", async () => {
+  const realFetch = globalThis.fetch;
+  let inFlight = 0,
+    peak = 0;
+  globalThis.fetch = async () => {
+    peak = Math.max(peak, ++inFlight);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    inFlight--;
+    return new Response("[]");
+  };
+  try {
+    // Six at once, like the audit; each must still get its answer.
+    const results = await Promise.all(
+      Array.from({ length: 6 }, (_, i) => query(`t-limit-${i}`, {})),
+    );
+    assert.equal(results.length, 6);
+    assert.equal(peak, retry.concurrency);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
